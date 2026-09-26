@@ -24,15 +24,15 @@ Stage path the recording must show, in this order:
 
 ## 1. Live URL
 
-- [ ] Find the production URL for this repo (Vercel project linked to `CorneliusHagmeister/CursorHack`, or a URL the user already gave). Write it on the line below.
+- [x] Find the production URL for this repo (Vercel project linked to `CorneliusHagmeister/CursorHack`, or a URL the user already gave). Write it on the line below.
 
-Live URL: `_`
+Live URL: `https://indigo-lane.vercel.app/`
 
 Done when: the line above is a real `https://` URL that loads this app, and the same URL appears in the README run/demo section, in `docs/hackathon/writeup.md`, and on `/pitch`. If no deployment exists, leave the line as `_`, say so in the reply, and point the end card at the repo URL until a deployment exists. Do not invent a domain.
 
 ## 2. Writeup
 
-- [ ] Write `docs/hackathon/writeup.md` and link it from the README.
+- [x] Write `docs/hackathon/writeup.md` and link it from the README.
 
 The writeup must include, in this order:
 
@@ -50,7 +50,7 @@ Done when: `docs/hackathon/writeup.md` exists, the README links to it, and every
 
 ## 3. End card — QR for each of us
 
-- [ ] Add `/pitch` and the QR images.
+- [x] Add `/pitch` and the QR images.
 
 Generate PNGs with `npx --yes qrcode` into `public/pitch/`:
 
@@ -73,8 +73,10 @@ Done when: `/pitch` renders all three images, the URLs match the files, and the 
 
 ## 4. Demo recording
 
-- [ ] Write `docs/hackathon/demo-script.md` with the six stage beats and roughly 30 seconds each (3 minutes total). The last beat is `/pitch` held long enough to scan the QRs.
-- [ ] Walk that path in the browser and save one PNG per beat to `docs/hackathon/demo/`: `01-shop.png`, `02-login.png`, `03-offer.png`, `04-checkout.png`, `05-merchant.png`, `06-pitch.png`.
+- [x] Write `docs/hackathon/demo-script.md` with the six stage beats and roughly 30 seconds each (3 minutes total). The last beat is `/pitch` held long enough to scan the QRs.
+- [ ] Walk that path in the browser
+
+  Blocker (2026-09-26): stills reel not captured in this pass — script + `/pitch` QRs ready; agents can fill `docs/hackathon/demo/*.png` after Cor’s order-404 fix. and save one PNG per beat to `docs/hackathon/demo/`: `01-shop.png`, `02-login.png`, `03-offer.png`, `04-checkout.png`, `05-merchant.png`, `06-pitch.png`.
 - [ ] Build a silent stills reel, 3 seconds per beat:
 
 ```bash

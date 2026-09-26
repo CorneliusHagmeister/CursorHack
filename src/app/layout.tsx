@@ -33,6 +33,7 @@ const FOOTER_LINKS = [
   { href: "/account", label: "Account" },
   { href: "/merchant", label: "Sell" },
   { href: "/api/md", label: "For agents" },
+  { href: "/pitch", label: "Pitch" },
 ];
 
 export default function RootLayout({
