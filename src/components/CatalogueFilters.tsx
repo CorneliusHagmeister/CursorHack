@@ -17,7 +17,7 @@ const optionLabel = (option: FacetOption, label: string) =>
 const FilterChip = ({ option, label = option.label }: { option: FacetOption; label?: string }) => {
   if (!option.active && option.count === 0) {
     return (
-      <span className="rounded-full px-3 py-1.5 text-xs text-stone-300" aria-hidden>
+      <span className="text-caps rounded-tile px-2 py-1.5 text-hairline" aria-hidden>
         {label}
       </span>
     );
@@ -27,19 +27,19 @@ const FilterChip = ({ option, label = option.label }: { option: FacetOption; lab
       href={option.href}
       scroll={false}
       aria-label={optionLabel(option, label)}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
-        option.active ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+      className={`text-caps inline-flex items-center gap-1.5 rounded-tile px-2 py-1.5 ${
+        option.active ? "bg-ink text-white" : "bg-floor text-ink hover:bg-hairline"
       }`}
     >
       {label}
-      <span className="tabular-nums opacity-60">{option.count}</span>
+      <span className="tabular-nums opacity-50">{option.count}</span>
     </Link>
   );
 };
 
 const FilterGroup = ({ id, title, children }: { id: string; title: string; children: ReactNode }) => (
   <div role="group" aria-labelledby={id}>
-    <h3 id={id} className="text-sm font-medium text-stone-900">
+    <h3 id={id} className="text-caps text-muted">
       {title}
     </h3>
     <div className="mt-2">{children}</div>
@@ -51,9 +51,9 @@ export const CatalogueFilters = ({ facets, idPrefix, shopperWaist, budgetMax }: 
   const moreBrands = facets.brands.slice(VISIBLE_BRANDS);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <FilterGroup id={`${idPrefix}-size`} title="Waist">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1">
           {facets.waists.map((option) => (
             <FilterChip
               key={option.value}
@@ -65,7 +65,7 @@ export const CatalogueFilters = ({ facets, idPrefix, shopperWaist, budgetMax }: 
       </FilterGroup>
 
       <FilterGroup id={`${idPrefix}-cut`} title="Cut">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1">
           {facets.cuts.map((option) => (
             <FilterChip key={option.label} option={option} />
           ))}
@@ -73,14 +73,14 @@ export const CatalogueFilters = ({ facets, idPrefix, shopperWaist, budgetMax }: 
       </FilterGroup>
 
       <FilterGroup id={`${idPrefix}-condition`} title="Condition">
-        <div className="flex overflow-hidden rounded-full border border-stone-200">
+        <div className="flex gap-px overflow-hidden rounded-tile bg-hairline">
           {facets.conditions.map((option) => {
             const empty = !option.active && option.count === 0;
             const tone = option.active
-              ? "bg-stone-900 text-white"
+              ? "bg-ink text-white"
               : empty
-                ? "pointer-events-none text-stone-300"
-                : "bg-white text-stone-700 hover:bg-stone-100";
+                ? "pointer-events-none bg-floor text-hairline"
+                : "bg-floor text-ink hover:bg-hairline";
             return (
               <Link
                 key={option.label}
@@ -89,7 +89,7 @@ export const CatalogueFilters = ({ facets, idPrefix, shopperWaist, budgetMax }: 
                 aria-label={optionLabel(option, option.label)}
                 aria-disabled={empty || undefined}
                 tabIndex={empty ? -1 : undefined}
-                className={`flex flex-1 flex-col items-center justify-center border-r border-stone-200 px-1 py-1.5 text-center text-[11px] leading-tight last:border-r-0 ${tone}`}
+                className={`text-caps flex flex-1 flex-col items-center justify-center px-0.5 py-1.5 text-center text-[10px] leading-tight ${tone}`}
               >
                 {option.label}
                 <span className="tabular-nums opacity-60">{option.count}</span>
@@ -97,14 +97,14 @@ export const CatalogueFilters = ({ facets, idPrefix, shopperWaist, budgetMax }: 
             );
           })}
         </div>
-        <div className="mt-1 flex justify-between px-1 text-[11px] text-stone-400" aria-hidden>
+        <div className="text-caps mt-1 flex justify-between text-[10px] text-muted" aria-hidden>
           <span>Newer</span>
           <span>More worn</span>
         </div>
       </FilterGroup>
 
       <FilterGroup id={`${idPrefix}-price`} title="Price">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1">
           {facets.prices.map((option) => (
             <FilterChip
               key={option.value}
@@ -116,17 +116,17 @@ export const CatalogueFilters = ({ facets, idPrefix, shopperWaist, budgetMax }: 
       </FilterGroup>
 
       <FilterGroup id={`${idPrefix}-brand`} title="Brand">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1">
           {shownBrands.map((option) => (
             <FilterChip key={option.label} option={option} />
           ))}
         </div>
         {moreBrands.length > 0 && (
           <details className="group mt-2">
-            <summary className="cursor-pointer list-none text-xs text-stone-600 underline group-open:hidden">
+            <summary className="text-caps mt-1 cursor-pointer list-none text-muted underline underline-offset-2 group-open:hidden">
               {moreBrands.length} more brands
             </summary>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1">
               {moreBrands.map((option) => (
                 <FilterChip key={option.label} option={option} />
               ))}

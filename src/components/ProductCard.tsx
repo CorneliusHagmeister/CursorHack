@@ -1,46 +1,43 @@
-"use client";
-
 import Image from "next/image";
-import { gbp, productAlt } from "@/lib/format";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { gbp, productAlt } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
-export function ProductCard({ product }: { product: Product }) {
-  return (
-    <Link
-      href={`/product/${product.id}`}
-      className="group flex flex-col overflow-hidden rounded-xl bg-white"
-    >
-      <div className="relative aspect-[3/4] overflow-hidden bg-stone-100">
-        <Image
-          src={product.image}
-          alt={productAlt(product)}
-          fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-          className="object-cover motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-[cubic-bezier(0.19,1,0.22,1)] motion-safe:group-hover:scale-[1.02]"
-        />
-        <span
-          className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-stone-500 shadow-sm"
-          aria-hidden
-        >
-          <Heart className="h-4 w-4" />
+type ProductCardProps = {
+  product: Product;
+  position: number;
+};
+
+const padIndex = (position: number) => String(position).padStart(2, "0");
+
+export const ProductCard = ({ product, position }: ProductCardProps) => (
+  <Link
+    href={`/product/${product.id}`}
+    className="group flex flex-col bg-floor p-3 outline-offset-[-2px] hover:bg-[#efefef]"
+  >
+    <div className="relative aspect-3/4">
+      <Image
+        src={product.image}
+        alt={productAlt(product)}
+        fill
+        sizes="(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 48vw"
+        className="object-contain mix-blend-multiply motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-[cubic-bezier(0.19,1,0.22,1)] motion-safe:group-hover:scale-[1.03]"
+      />
+      {product.perkEligible && (
+        <span className="text-caps absolute left-0 top-0 rounded-tile bg-white px-1.5 py-0.5 text-ink">
+          Bundle
         </span>
-        {product.perkEligible && (
-          <span className="absolute bottom-2 left-2 rounded bg-white/95 px-1.5 py-0.5 text-[10px] font-medium text-stone-700">
-            Bundle eligible
-          </span>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col gap-0.5 pt-2">
-        <p className="text-sm font-medium text-stone-900">{product.brand}</p>
-        <p className="text-xs text-stone-500">
-          W{product.waist} · {product.condition}
-        </p>
-        <p className="mt-1 text-sm font-semibold tabular-nums text-stone-900">
-          {gbp(product.price)}
-        </p>
-      </div>
-    </Link>
-  );
-}
+      )}
+    </div>
+    <div className="mt-3 flex items-baseline justify-between gap-3">
+      <span className="text-caps tabular-nums text-muted">{padIndex(position)}</span>
+      <span className="text-caps tabular-nums text-ink">{gbp(product.price)}</span>
+    </div>
+    <p className="text-caps mt-1 truncate text-ink">
+      {product.brand} {product.name}
+    </p>
+    <p className="text-caps text-muted">
+      W{product.waist} · {product.condition}
+    </p>
+  </Link>
+);

@@ -120,10 +120,10 @@ export const SearchBox = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative order-last flex w-full basis-full items-center gap-2 rounded-full border border-stone-200 bg-stone-50 px-3 py-2 sm:order-0 sm:max-w-md sm:basis-auto"
+      className="relative order-last flex w-full basis-full items-center gap-2 rounded-tile bg-floor px-3 py-2 sm:order-0 sm:min-w-40 sm:max-w-md sm:flex-1 sm:basis-0"
       role="search"
     >
-      <Search className="h-4 w-4 shrink-0 text-stone-400" aria-hidden />
+      <Search className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
       <input
         type="search"
         value={value}
@@ -143,14 +143,14 @@ export const SearchBox = () => {
         aria-controls={listboxId}
         aria-activedescendant={activeSuggestion ? `${listboxId}-${activeSuggestion.key}` : undefined}
         autoComplete="off"
-        className="w-full bg-transparent text-sm outline-none placeholder:text-stone-400"
+        className="w-full bg-transparent text-sm outline-none placeholder:text-muted"
       />
       <ul
         id={listboxId}
         role="listbox"
         aria-label="Suggestions"
         hidden={!expanded}
-        className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-stone-200 bg-white py-1 shadow-lg"
+        className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-tile bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
       >
         {suggestions.map((suggestion, index) => (
           <li
@@ -161,12 +161,12 @@ export const SearchBox = () => {
             onMouseDown={(e) => e.preventDefault()}
             onMouseEnter={() => setActiveIndex(index)}
             onClick={() => handleGo(suggestion.href)}
-            className={`flex cursor-pointer items-baseline justify-between gap-4 px-4 py-2 text-sm ${
-              index === activeIndex ? "bg-stone-100" : ""
+            className={`flex cursor-pointer items-baseline justify-between gap-4 px-3 py-2 text-sm ${
+              index === activeIndex ? "bg-floor" : ""
             }`}
           >
-            <span className="truncate text-stone-900">{suggestion.label}</span>
-            <span className="shrink-0 text-xs text-stone-500">{suggestion.kind}</span>
+            <span className="truncate text-ink">{suggestion.label}</span>
+            <span className="text-caps shrink-0 text-muted">{suggestion.kind}</span>
           </li>
         ))}
       </ul>

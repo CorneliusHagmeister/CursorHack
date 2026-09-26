@@ -1,6 +1,6 @@
 import type { Product, ProductFilters } from "./types";
 
-/** Seed catalogue. Photos live in public/products/{id}.jpg. */
+/** Seed catalogue. Photos live in public/listings/{id}.jpg; sources in photo-sources.ts. */
 export const PRODUCTS: Product[] = [
   {
     id: "levi-501-indigo",
@@ -17,7 +17,7 @@ export const PRODUCTS: Product[] = [
     city: "London",
     perkEligible: false,
     accent: "#1e3a5f",
-    image: "/products/levi-501-indigo.jpg",
+    image: "/listings/levi-501-indigo.jpg",
     tags: ["iconic", "straight", "everyday"],
   },
   {
@@ -35,7 +35,7 @@ export const PRODUCTS: Product[] = [
     city: "Manchester",
     perkEligible: false,
     accent: "#2c5282",
-    image: "/products/wrangler-texas.jpg",
+    image: "/listings/wrangler-texas.jpg",
     tags: ["western", "tall", "sturdy"],
   },
   {
@@ -53,7 +53,7 @@ export const PRODUCTS: Product[] = [
     city: "Bristol",
     perkEligible: false,
     accent: "#111827",
-    image: "/products/nudie-lean-dean.jpg",
+    image: "/listings/nudie-lean-dean.jpg",
     tags: ["premium", "slim", "organic"],
   },
   {
@@ -71,7 +71,7 @@ export const PRODUCTS: Product[] = [
     city: "Leeds",
     perkEligible: false,
     accent: "#3d4f5f",
-    image: "/products/carhartt-pontiac.jpg",
+    image: "/listings/carhartt-pontiac.jpg",
     tags: ["workwear", "relaxed", "layer"],
   },
   {
@@ -89,7 +89,7 @@ export const PRODUCTS: Product[] = [
     city: "Brighton",
     perkEligible: true,
     accent: "#2563eb",
-    image: "/products/dickies-872.jpg",
+    image: "/listings/dickies-872.jpg",
     tags: ["slim", "work", "perk"],
   },
   {
@@ -107,7 +107,7 @@ export const PRODUCTS: Product[] = [
     city: "Birmingham",
     perkEligible: true,
     accent: "#7dd3fc",
-    image: "/products/uniqlo-wide.jpg",
+    image: "/listings/uniqlo-wide.jpg",
     tags: ["wide", "casual", "perk"],
   },
   {
@@ -125,7 +125,7 @@ export const PRODUCTS: Product[] = [
     city: "Glasgow",
     perkEligible: true,
     accent: "#60a5fa",
-    image: "/products/levi-550-relaxed.jpg",
+    image: "/listings/levi-550-relaxed.jpg",
     tags: ["relaxed", "vintage-feel", "perk"],
   },
   {
@@ -143,25 +143,25 @@ export const PRODUCTS: Product[] = [
     city: "London",
     perkEligible: false,
     accent: "#0f172a",
-    image: "/products/apc-petit-new.jpg",
+    image: "/listings/apc-petit-new.jpg",
     tags: ["raw", "premium", "hero"],
   },
   {
     id: "weekday-ace",
-    name: "Ace Organic Cotton",
+    name: "Astro Loose Baggy",
     brand: "Weekday",
     price: 32,
     waist: 29,
     length: 30,
-    wash: "Vintage blue",
-    cut: "Regular taper",
+    wash: "Saddle blue",
+    cut: "Relaxed baggy",
     condition: "Very Good",
     description:
-      "Soft organic Ace jeans with a lived-in vintage wash. Mid-rise, easy everyday taper.",
+      "Mid-rise Astro in a sun-faded saddle blue. Loose through the leg, stacks nicely over trainers.",
     city: "Edinburgh",
     perkEligible: false,
     accent: "#1d4ed8",
-    image: "/products/weekday-ace.jpg",
+    image: "/listings/weekday-ace.jpg",
     tags: ["organic", "everyday", "taper"],
   },
   {
@@ -179,7 +179,7 @@ export const PRODUCTS: Product[] = [
     city: "Liverpool",
     perkEligible: false,
     accent: "#1e40af",
-    image: "/products/lee-101-z.jpg",
+    image: "/listings/lee-101-z.jpg",
     tags: ["heritage", "straight", "tall"],
   },
   {
@@ -189,15 +189,15 @@ export const PRODUCTS: Product[] = [
     price: 45,
     waist: 31,
     length: 34,
-    wash: "Blue rinsed",
+    wash: "Black rinsed",
     cut: "Regular taper",
     condition: "Excellent",
     description:
-      "Japanese denim, UK warehouse. Crisp ED-55 with room through the thigh and a clean taper.",
+      "Japanese Kaguya selvedge in black, UK warehouse. Crisp ED-55 with room through the thigh and a clean taper.",
     city: "London",
     perkEligible: false,
     accent: "#172554",
-    image: "/products/edwin-ed55.jpg",
+    image: "/listings/edwin-ed55.jpg",
     tags: ["japanese", "taper", "premium"],
   },
   {
@@ -215,7 +215,7 @@ export const PRODUCTS: Product[] = [
     city: "Cardiff",
     perkEligible: true,
     accent: "#334155",
-    image: "/products/ms-autograph.jpg",
+    image: "/listings/ms-autograph.jpg",
     tags: ["slim", "smart", "perk"],
   },
 ];

@@ -8,37 +8,27 @@ const CUTS = ["Straight", "Slim", "Relaxed", "Wide"] as const;
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-        <Link
-          href="/"
-          className="text-lg font-semibold tracking-tight text-stone-900"
-        >
+    <header className="sticky top-3 z-40 mx-3 mt-3 rounded-tile bg-white">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
+        <Link href="/" className="font-display text-lg italic tracking-tight text-ink">
           Indigo Lane
         </Link>
 
         <SearchBox />
 
-        <nav className="ml-auto flex items-center gap-1 text-sm sm:gap-2">
-          <Link
-            href="/?cut=Straight"
-            className="hidden rounded-full px-2.5 py-1.5 text-stone-600 hover:bg-stone-100 md:inline"
-          >
-            Straight
-          </Link>
-          {CUTS.slice(1).map((cut) => (
+        <nav aria-label="Cuts and account" className="ml-auto flex items-center gap-1">
+          {CUTS.map((cut, index) => (
             <Link
               key={cut}
               href={`/?cut=${encodeURIComponent(cut)}`}
-              className="hidden rounded-full px-2.5 py-1.5 text-stone-600 hover:bg-stone-100 lg:inline"
+              className={`text-caps hidden rounded-tile px-2 py-1.5 text-ink hover:bg-floor ${
+                index === 0 ? "md:inline" : "lg:inline"
+              }`}
             >
               {cut}
             </Link>
           ))}
-          <Link
-            href="/merchant"
-            className="rounded-full px-2.5 py-1.5 text-stone-600 hover:bg-stone-100"
-          >
+          <Link href="/merchant" className="text-caps rounded-tile px-2 py-1.5 text-ink hover:bg-floor">
             Sell
           </Link>
           <AuthMenu />
