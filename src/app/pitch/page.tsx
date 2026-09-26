@@ -4,8 +4,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Haggleberry · pitch",
-  description:
-    "Agentic commerce for second-hand denim: negotiate packages of terms, not bare discounts.",
+  description: "A shop where everything takes an offer. Finn haggles for the store.",
 };
 
 const LIVE = "https://indigo-lane.vercel.app/";
@@ -29,11 +28,11 @@ export default function PitchPage() {
   return (
     <div className="px-3 pb-16 pt-10 sm:pt-14">
       <div className="mx-auto max-w-3xl px-1">
-        <h1 className="font-display text-5xl text-ink sm:text-7xl">Haggleberry</h1>
+        <h1 className="font-slab text-5xl font-bold text-ink sm:text-7xl">Haggleberry</h1>
         <p className="mt-5 max-w-2xl text-base text-ink sm:text-lg">
-          Second-hand denim where shopper and merchant agents negotiate packages of terms — returns,
-          risk, shipping, final sale — not just a discount, so both sides can verify risk and land a
-          fairer deal.
+          A shop where everything takes an offer. Finn works for the store. Your agent works for
+          you. A cheaper price costs you something, often final sale or slower shipping, and both of
+          you can read the same deal.
         </p>
 
         <dl className="mt-8 space-y-3 text-sm text-ink">
@@ -107,24 +106,24 @@ export default function PitchPage() {
         </div>
 
         <section className="mt-14 max-w-2xl space-y-3 text-sm text-ink">
-          <h2 className="font-display text-2xl text-ink">Stage path</h2>
+          <h2 className="font-display text-2xl text-ink">The demo</h2>
           <ol className="list-decimal space-y-2 pl-5">
             <li>Open the shop logged out.</li>
-            <li>Continue as demo shopper (Sam) on /login.</li>
-            <li>Make an offer — Finn answers with a deal package, not a bare discount.</li>
-            <li>Apply and confirm checkout.</li>
-            <li>Flip to /merchant/live for the same session.</li>
-            <li>Hold this /pitch screen for the QRs.</li>
+            <li>On /login, continue as demo shopper. That is Sam.</li>
+            <li>Start an offer. Finn comes back with a deal, say £42 if you take final sale.</li>
+            <li>Apply it and confirm checkout.</li>
+            <li>Open /merchant/live. Same thread.</li>
+            <li>Stay here so people can scan the QRs.</li>
           </ol>
           <p className="text-muted">
-            Full writeup:{" "}
+            Writeup is{" "}
             <a
               href={`${REPO}/blob/feature/pitch/docs/hackathon/writeup.md`}
               className="underline decoration-hairline underline-offset-4 hover:text-berry"
             >
               docs/hackathon/writeup.md
             </a>
-            . Demo login stays on /login — do not read passwords aloud.
+            . Sign in on /login. Do not read the password out loud.
           </p>
         </section>
       </div>

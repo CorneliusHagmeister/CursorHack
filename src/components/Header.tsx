@@ -10,7 +10,7 @@ export function Header() {
   return (
     <header className="sticky top-3 z-40 mx-3 mt-3 rounded-tile bg-white">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
-        <Link href="/" className="flex items-center gap-2 font-display text-lg italic tracking-tight text-ink">
+        <Link href="/" className="flex items-center gap-2 font-slab text-xl font-bold text-ink">
           <img
             src="/haggleberry-mark.svg"
             alt=""
