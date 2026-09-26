@@ -33,7 +33,7 @@ export function Header() {
 
         <form
           onSubmit={handleSearch}
-          className="order-3 flex w-full flex-1 items-center gap-2 rounded-full border border-stone-200 bg-stone-50 px-3 py-2 sm:order-none sm:max-w-md"
+          className="order-last flex w-full basis-full items-center gap-2 rounded-full border border-stone-200 bg-stone-50 px-3 py-2 sm:order-0 sm:max-w-md sm:basis-auto"
           role="search"
         >
           <Search className="h-4 w-4 shrink-0 text-stone-400" aria-hidden />

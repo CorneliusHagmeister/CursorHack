@@ -10,6 +10,8 @@ export async function GET() {
       signedIn: true,
       name: RETURNING_SHOPPER.name,
       email: RETURNING_SHOPPER.email,
+      city: RETURNING_SHOPPER.city,
+      budgetMax: RETURNING_SHOPPER.budgetMax,
       mode: "demo",
     });
   }

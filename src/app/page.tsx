@@ -1,7 +1,10 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { ProductCard } from "@/components/ProductCard";
 import { CatalogueFilters } from "@/components/CatalogueFilters";
 import { searchProducts } from "@/lib/products";
+import { resolveShopperContext, hasPersonalContext } from "@/lib/context";
+import { gbp } from "@/lib/format";
 import type { Condition, ProductFilters } from "@/lib/types";
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
@@ -25,6 +28,9 @@ export default async function HomePage({
   };
 
   const products = searchProducts(filters);
+  const ctx = await resolveShopperContext({ searchParams: sp });
+  const shopper = hasPersonalContext(ctx) ? ctx.shopper : undefined;
+  const firstName = shopper?.name.split(" ")[0];
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -32,7 +38,19 @@ export default async function HomePage({
         <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">
           Second-hand denim
         </h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-stone-600">
+          {shopper && firstName ? (
+            <>
+              {firstName} wears W{shopper.waist} and shops up to {gbp(shopper.budgetMax)}.{" "}
+              <Link
+                href={`/?waist=${shopper.waist}&max_price=${shopper.budgetMax}`}
+                className="underline"
+              >
+                Show my size
+              </Link>
+              {" · "}
+            </>
+          ) : null}
           {products.length} pairs · UK sellers
         </p>
       </div>

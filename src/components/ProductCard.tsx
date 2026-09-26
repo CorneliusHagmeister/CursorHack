@@ -4,13 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { gbp } from "@/lib/format";
-
-export function productAlt(
-  product: Pick<Product, "brand" | "name" | "wash" | "cut">
-) {
-  return `${product.brand} ${product.name}, ${product.wash.toLowerCase()} ${product.cut.toLowerCase()}`;
-}
+import { gbp, productAlt } from "@/lib/format";
 
 export function ProductCard({ product }: { product: Product }) {
   return (

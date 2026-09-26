@@ -21,7 +21,8 @@ export async function GET() {
     "- REST: `/api/v1/products`, `/api/v1/negotiations`, `/api/v1/orders`",
     "- MCP: `/api/mcp` or `/mcp/http`",
     "- OpenAPI: `/openapi.json`",
-    "- Auth: `Authorization: Bearer <agent token>` or demo token `il_demo_agent_token`",
+    "- Sign in as the shopper: open /login and enter the one-time code they pasted. Do not ask for a password.",
+    "- Bearer after an API redeem: POST /api/auth/session-code/redeem `{ code }`, then `Authorization: Bearer <token>`. Demo token `il_demo_agent_token` also works.",
     "",
   ];
   return new NextResponse(lines.join("\n"), {

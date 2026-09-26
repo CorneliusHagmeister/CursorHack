@@ -6,10 +6,32 @@ import { FormEvent, useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("sam.okonkwo@example.com");
-  const [password, setPassword] = useState("indigo-demo");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleCode = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "That code did not work");
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "That code did not work");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -55,40 +77,68 @@ export default function LoginPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
       <h1 className="text-2xl font-semibold text-stone-900">Sign in</h1>
-      <p className="mt-2 text-sm text-stone-500">
-        Fit, budget, and past buys unlock on the product page after you sign in.
-        The landing page stays anonymous.
-      </p>
+
+      <form onSubmit={handleCode} className="mt-8">
+        <label className="block text-sm" htmlFor="one-time-code">
+          One-time code
+        </label>
+        <input
+          id="one-time-code"
+          name="code"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          autoComplete="one-time-code"
+          placeholder="From the shopper"
+          aria-describedby="code-hint"
+          className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
+          required
+        />
+        <p id="code-hint" className="mt-2 text-sm text-stone-500">
+          Paste the code they gave you. It signs you in as them. It is not a password.
+        </p>
+        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        <button
+          type="submit"
+          disabled={busy}
+          className="mt-4 w-full rounded-full bg-stone-900 px-4 py-3 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+        >
+          Sign in with this code
+        </button>
+      </form>
 
       <button
         type="button"
         onClick={() => void handleDemo()}
         disabled={busy}
-        className="mt-8 w-full rounded-full bg-stone-900 px-4 py-3 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+        className="mt-8 w-full rounded-full border border-stone-300 px-4 py-3 text-sm font-medium text-stone-800 hover:bg-stone-50 disabled:opacity-50"
       >
         Continue as demo shopper
       </button>
-      <p className="mt-2 text-center text-xs text-stone-400">
-        Sam Okonkwo · W31 · budget £90 · abandoned A.P.C. at £95
-      </p>
 
       <form onSubmit={handleLogin} className="mt-10 space-y-4">
-        <label className="block text-sm">
-          <span className="text-stone-600">Email</span>
+        <h2 className="text-sm font-medium text-stone-800">Or use your email</h2>
+        <label className="block text-sm" htmlFor="email">
+          Email
           <input
+            id="email"
             type="email"
+            name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
             required
           />
         </label>
-        <label className="block text-sm">
-          <span className="text-stone-600">Password</span>
+        <label className="block text-sm" htmlFor="password">
+          Password
           <input
+            id="password"
             type="password"
+            name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
             className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
             required
           />
@@ -99,7 +149,7 @@ export default function LoginPage() {
           disabled={busy}
           className="w-full rounded-full border border-stone-300 px-4 py-2.5 text-sm font-medium text-stone-800 hover:bg-stone-50 disabled:opacity-50"
         >
-          Sign in
+          Sign in with email
         </button>
       </form>
 

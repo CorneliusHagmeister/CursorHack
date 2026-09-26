@@ -71,6 +71,99 @@ function spec(origin: string) {
     },
     servers: [{ url: origin }],
     paths: {
+      "/api/auth/session-code/redeem": {
+        post: {
+          operationId: "redeemSessionCode",
+          summary: "Turn a one-time code into shopper context",
+          description:
+            "The shopper copies a note from Account and pastes it to you. Prefer signing in at /login by typing the code. This endpoint is the API alternative: send the code, receive fit, budget, and past buys plus a bearer token. Never ask for their password. The code works once.",
+          "x-openai-isConsequential": false,
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["code"],
+                  properties: {
+                    code: {
+                      type: "string",
+                      description: "The code the shopper reads aloud, such as K7M Q2P.",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Shopper context and a bearer token",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      token: { type: "string" },
+                      shopper: { type: "object" },
+                      hint: { type: "string" },
+                    },
+                  },
+                },
+              },
+            },
+            "401": error,
+          },
+        },
+      },
+      "/api/demo/bank-statement": {
+        get: {
+          operationId: "getBankStatement",
+          summary: "Read the shopper's recent card spends (fake demo data)",
+          description:
+            "Demo only: a pretend linked card, no real bank. Returns the last 90 days of spends with a denim summary, so you can see where the shopper's budget comes from. Needs the shopper's sign-in or the bearer token from their one-time code.",
+          "x-openai-isConsequential": false,
+          responses: {
+            "200": {
+              description: "Transactions and a denim summary",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      demo: { type: "boolean" },
+                      cardLast4: { type: "string" },
+                      transactions: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            id: { type: "string" },
+                            date: { type: "string", format: "date" },
+                            merchant: { type: "string" },
+                            amountGbp: { type: "number" },
+                            category: { type: "string" },
+                            cardLast4: { type: "string" },
+                          },
+                        },
+                      },
+                      denim: {
+                        type: "object",
+                        properties: {
+                          count: { type: "integer" },
+                          totalGbp: { type: "number" },
+                          largestGbp: { type: "number" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            "401": error,
+            "404": error,
+          },
+        },
+      },
       "/api/products": {
         get: {
           operationId: "listProducts",

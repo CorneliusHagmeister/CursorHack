@@ -2,12 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PairAndPerk } from "@/components/PairAndPerk";
-import { productAlt } from "@/components/ProductCard";
 import { NegotiatePanel } from "@/components/NegotiatePanel";
 import { ProductJsonLd } from "@/components/ProductJsonLd";
 import { getPerkOptions, getProduct } from "@/lib/products";
 import { resolveShopperContext, hasPersonalContext } from "@/lib/context";
-import { gbp } from "@/lib/format";
+import { gbp, productAlt } from "@/lib/format";
+import { returnPolicyForCity } from "@/lib/return-policies";
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
 
@@ -22,15 +22,20 @@ export default async function ProductPage({
   const sp = await searchParams;
   const product = getProduct(id);
   if (!product) notFound();
-  const perkOptions = getPerkOptions(id);
   const ctx = await resolveShopperContext({ searchParams: sp });
   const shopper = ctx.shopper;
   const personal = hasPersonalContext(ctx);
+  const perkOptions = getPerkOptions(id).slice().sort((a, b) => {
+    if (!personal || !shopper) return a.price - b.price;
+    const distance = (waist: number) => Math.abs(waist - shopper.waist);
+    return distance(a.waist) - distance(b.waist) || a.price - b.price;
+  });
   const waistDelta = shopper
     ? Math.abs(product.waist - shopper.waist)
     : 0;
   const overBudget =
     shopper != null ? product.price - shopper.budgetMax : 0;
+  const returnPolicy = returnPolicyForCity(personal ? shopper?.city : undefined);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
@@ -48,14 +53,14 @@ export default async function ProductPage({
         </p>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-stone-100">
+      <div className="grid items-start gap-6 md:grid-cols-2 md:gap-10">
+        <div className="relative h-[42vh] max-h-80 w-full overflow-hidden rounded-xl bg-stone-100 md:aspect-3/4 md:h-auto md:max-h-[calc(100vh-8rem)]">
           <Image
             src={product.image}
             alt={productAlt(product)}
             fill
             priority
-            sizes="(min-width: 1024px) 36rem, 100vw"
+            sizes="(min-width: 768px) 36rem, 100vw"
             className="object-cover"
           />
         </div>
@@ -80,30 +85,7 @@ export default async function ProductPage({
             </p>
           )}
 
-          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            {[
-              ["Size", `W${product.waist} / L${product.length}`],
-              ["Condition", product.condition],
-              ["Cut", product.cut],
-              ["Wash", product.wash],
-            ].map(([k, v]) => (
-              <div key={k}>
-                <dt className="text-stone-500">{k}</dt>
-                <dd className="font-medium text-stone-900">{v}</dd>
-              </div>
-            ))}
-          </dl>
-
-          <div className="mt-6 rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm">
-            <p className="font-medium text-stone-900">Seller in {product.city}</p>
-            <p className="mt-0.5 text-stone-500">Member · ships UK-wide</p>
-          </div>
-
-          <p className="mt-6 text-stone-600 leading-relaxed">
-            {product.description}
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href={`/checkout?primary=${product.id}`}
               className="inline-flex rounded-full bg-stone-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-stone-800"
@@ -119,13 +101,42 @@ export default async function ProductPage({
           </div>
 
           {!personal && (
-            <p className="mt-3 text-xs text-stone-500">
+            <p className="mt-3 text-sm text-stone-500">
               <Link href="/login" className="underline">
                 Sign in
               </Link>{" "}
               to bring fit and budget into the offer.
             </p>
           )}
+          {personal && (
+            <p className="mt-3 text-sm text-stone-500">
+              <Link href="/account" className="underline">
+                Let your agent shop as you
+              </Link>
+            </p>
+          )}
+
+          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+            {[
+              ["Size", `W${product.waist} / L${product.length}`],
+              ["Condition", product.condition],
+              ["Cut", product.cut],
+              ["Wash", product.wash],
+            ].map(([k, v]) => (
+              <div key={k}>
+                <dt className="text-stone-500">{k}</dt>
+                <dd className="font-medium text-stone-900">{v}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <p className="mt-6 text-sm text-stone-600">
+            Seller in {product.city} · ships UK-wide · {returnPolicy.badge}
+          </p>
+
+          <p className="mt-6 text-stone-600 leading-relaxed">
+            {product.description}
+          </p>
         </div>
       </div>
 
@@ -134,7 +145,11 @@ export default async function ProductPage({
       </div>
 
       <div className="mt-10">
-        <PairAndPerk primary={product} perkOptions={perkOptions} />
+        <PairAndPerk
+          primary={product}
+          perkOptions={perkOptions}
+          shopperWaist={personal && shopper ? shopper.waist : undefined}
+        />
       </div>
     </div>
   );
