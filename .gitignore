@@ -34,3 +34,4 @@ pnpm-workspace.yaml
 yarn-debug.log*
 yarn-error.log*
 /data/agent-tokens.json
+supabase/.temp/
