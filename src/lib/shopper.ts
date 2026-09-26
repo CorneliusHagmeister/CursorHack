@@ -1,5 +1,6 @@
 import type { ShopperProfile } from "./types";
 
+/** Seeded demo shopper. Used only after login, demo cookie, or agent token. */
 export const RETURNING_SHOPPER: ShopperProfile = {
   id: "shopper_sam_okonkwo",
   name: "Sam Okonkwo",
@@ -10,7 +11,12 @@ export const RETURNING_SHOPPER: ShopperProfile = {
   preferredBrands: ["A.P.C.", "Nudie Jeans", "Edwin"],
   minCondition: "Good",
   budgetMax: 90,
-  styleLikes: ["raw indigo", "slim taper", "organic cotton", "minimal branding"],
+  styleLikes: [
+    "raw indigo",
+    "slim taper",
+    "organic cotton",
+    "minimal branding",
+  ],
   pastPurchases: [
     {
       productId: "nudie-lean-dean",
@@ -46,6 +52,10 @@ export const RETURNING_SHOPPER: ShopperProfile = {
     "Browsed A.P.C. Petit New Standard last week; abandoned cart at full £95.",
 };
 
+export const DEMO_SHOPPER_COOKIE = "il_demo_shopper";
+export const DEMO_SHOPPER_PASSWORD = "indigo-demo";
+
+/** @deprecated Prefer resolveShopperContext. Kept for seed/fallback paths. */
 export function getShopper(): ShopperProfile {
   return RETURNING_SHOPPER;
 }

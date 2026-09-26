@@ -1,10 +1,15 @@
-export type Condition = "Like New" | "Excellent" | "Very Good" | "Good" | "Fair";
+export type Condition =
+  | "Like New"
+  | "Excellent"
+  | "Very Good"
+  | "Good"
+  | "Fair";
 
 export type Product = {
   id: string;
   name: string;
   brand: string;
-  price: number; // GBP
+  price: number;
   waist: number;
   length: number;
   wash: string;
@@ -26,7 +31,7 @@ export type PastPurchase = {
   waist: number;
   condition: Condition;
   price: number;
-  purchasedAt: string; // ISO date
+  purchasedAt: string;
   note: string;
 };
 
@@ -46,6 +51,14 @@ export type ShopperProfile = {
   lastSeenNote: string;
 };
 
+export type ShopperSource = "anonymous" | "ad" | "login" | "agent";
+
+export type ShopperContext = {
+  source: ShopperSource;
+  shopper?: ShopperProfile;
+  campaign?: string;
+};
+
 export type OrderItem = {
   productId: string;
   name: string;
@@ -53,6 +66,8 @@ export type OrderItem = {
   price: number;
   role: "primary" | "perk";
 };
+
+export type OrderChannel = "web" | "agent";
 
 export type Order = {
   id: string;
@@ -71,6 +86,7 @@ export type Order = {
   note?: string;
   negotiationSummary?: string;
   shopperId?: string;
+  channel?: OrderChannel;
 };
 
 export type AssistMessage = {
@@ -85,7 +101,6 @@ export type AssistRequest = {
   productId?: string;
 };
 
-/** Deal state produced by live negotiation */
 export type NegotiatedDeal = {
   primaryId: string;
   perkId: string | null;
@@ -105,14 +120,24 @@ export type NegotiateRequest = {
   productId: string;
   message: string;
   history: NegotiateMessage[];
-  /** Current working deal from prior turns */
   deal?: NegotiatedDeal | null;
+  shopper?: ShopperProfile | null;
+  campaign?: string | null;
 };
 
 export type NegotiateResponse = {
-  /** Stepwise bubbles to reveal live on stage */
   steps: string[];
   deal: NegotiatedDeal;
   quickReplies: string[];
   canApply: boolean;
+};
+
+export type ProductFilters = {
+  q?: string;
+  waist?: number;
+  brand?: string;
+  condition?: Condition;
+  cut?: string;
+  maxPrice?: number;
+  perkEligible?: boolean;
 };

@@ -1,12 +1,11 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { productAlt } from "@/components/ProductCard";
 import { PRODUCTS } from "@/lib/products";
-import { RETURNING_SHOPPER } from "@/lib/shopper";
 import { gbp } from "@/lib/format";
 
 function CheckoutForm() {
@@ -32,17 +31,27 @@ function CheckoutForm() {
   const listPrice = listParam ? Number(listParam) : primary?.price ?? 0;
   const payPrice = priceParam ? Number(priceParam) : primary?.price ?? 0;
 
-  const s = RETURNING_SHOPPER;
-  const [buyerName, setBuyerName] = useState(s.name);
-  const [buyerEmail, setBuyerEmail] = useState(s.email);
-  const [shippingCity, setShippingCity] = useState(s.city);
+  const [buyerName, setBuyerName] = useState("");
+  const [buyerEmail, setBuyerEmail] = useState("");
+  const [shippingCity, setShippingCity] = useState("");
   const [note, setNote] = useState(
-    negotiated
-      ? `Negotiated deal for returning shopper ${s.name.split(" ")[0]}`
-      : "Leave with neighbour if out"
+    negotiated ? "Negotiated deal" : "Leave with neighbour if out"
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.signedIn) return;
+        // Prefill only when signed in
+        setBuyerName((n) => n || data.name || "");
+        setBuyerEmail((e) => e || data.email || "");
+        setShippingCity((c) => c || "London");
+      })
+      .catch(() => undefined);
+  }, []);
 
   if (!primary) {
     return (
@@ -104,10 +113,20 @@ function CheckoutForm() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-5">
         <div className="space-y-4 lg:col-span-3">
-          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
-            Prefill from remembered profile · {s.name} · W{s.waist} ·{" "}
-            {s.preferredBrands.slice(0, 2).join(" / ")}
-          </p>
+          {buyerName ? (
+            <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+              Prefill from signed-in profile · {buyerName}
+              {buyerEmail ? ` · ${buyerEmail}` : ""}
+            </p>
+          ) : (
+            <p className="rounded-lg bg-stone-100 px-3 py-2 text-xs text-stone-600">
+              Guest checkout.{" "}
+              <Link href="/login" className="underline">
+                Sign in
+              </Link>{" "}
+              to prefill.
+            </p>
+          )}
           <label className="block text-sm">
             <span className="text-stone-600">Name</span>
             <input

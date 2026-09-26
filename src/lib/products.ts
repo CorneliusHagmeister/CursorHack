@@ -1,4 +1,4 @@
-import type { Product } from "./types";
+import type { Product, ProductFilters } from "./types";
 
 /** Seed catalogue. Photos live in public/products/{id}.jpg. */
 export const PRODUCTS: Product[] = [
@@ -226,6 +226,30 @@ export function getProduct(id: string): Product | undefined {
 
 export function listProducts(): Product[] {
   return PRODUCTS;
+}
+
+export function searchProducts(filters: ProductFilters = {}): Product[] {
+  return PRODUCTS.filter((p) => {
+    if (filters.waist != null && p.waist !== filters.waist) return false;
+    if (filters.brand) {
+      const b = filters.brand.toLowerCase();
+      if (!p.brand.toLowerCase().includes(b)) return false;
+    }
+    if (filters.condition && p.condition !== filters.condition) return false;
+    if (filters.cut) {
+      const c = filters.cut.toLowerCase();
+      if (!p.cut.toLowerCase().includes(c)) return false;
+    }
+    if (filters.maxPrice != null && p.price > filters.maxPrice) return false;
+    if (filters.perkEligible != null && p.perkEligible !== filters.perkEligible)
+      return false;
+    if (filters.q) {
+      const q = filters.q.toLowerCase();
+      const hay = `${p.brand} ${p.name} ${p.wash} ${p.cut} ${p.city} ${p.tags.join(" ")}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
 }
 
 /** Complementary perk candidates for a primary purchase */
