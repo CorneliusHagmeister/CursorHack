@@ -22,7 +22,7 @@ export function AssistChat() {
     {
       role: "assistant",
       content:
-        "Hi — I'm the Indigo Lane fit desk. Tell me your waist + preferred condition (e.g. \"W32 excellent\") and I'll match the catalogue. On a product page I also suggest Pair & Perk free add-ons.\n\n📋 Demo script: ask \"W31 very good\" → open a match → New Ways to Buy → claim a perk → checkout → check Merchant.",
+        "Hi — I'm the Indigo Lane fit desk. Tell me your waist + preferred condition (e.g. \"W32 excellent\") and I'll match the catalogue. On a product page I also suggest Pair & Perk free add-ons.\n\nRemembered shopper: Sam · W31 · APC/Nudie.\n\n📋 Demo: prefer product Negotiate panel; or ask \"W31 very good\" → open a match → New Ways to Buy → claim a perk → checkout → check Merchant.",
     },
   ]);
   const [matches, setMatches] = useState<Product[]>([]);

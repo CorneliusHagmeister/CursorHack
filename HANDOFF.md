@@ -19,10 +19,9 @@
 
 ## In-flight / finish before freeze
 
-1. **Merchant + order confirm** — display `negotiationSummary`, `discount`, `listPrice`, mechanic badge for negotiated orders (types already extended; UI may still be old).
-2. **`npm run build`** — must pass after Order type change (`listPrice`/`discount` required on create).
-3. **README** — tighten 3-min script to: returning shopper → remembered context → live negotiate → Pair & Perk land → merchant proof.
-4. Ignore stray `pnpm-*` if present unless you intentionally switch PMs — project uses **npm**.
+**Done in follow-up commit:** merchant + order confirm show negotiation summary/discount; README demo script tightened; `npm run build` passes.
+
+Optional polish before 16:30: stage-rehearse the click-path once; tweak negotiate copy if judges want sharper counters.
 
 ## Demo click-path (memorise)
 

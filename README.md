@@ -1,66 +1,42 @@
 # Indigo Lane
 
-Fleek London × Grok Bot Commerce hackathon demo — **second-hand jeans** with a sharp **Pair & Perk** New Ways to Buy mechanic and a wired size/condition assist chat.
+Fleek London × Grok Bot Commerce — **second-hand jeans** with **Pair & Perk** and a **live negotiation** desk that uses a **returning shopper’s remembered context**.
 
-Two-sided: **consumer storefront** + **merchant dashboard**, shared catalogue and orders.
+See **CONTEXT.md** / **HANDOFF.md** for the durable spine and IDE handoff.
 
 ## Stack
 
-- Next.js App Router · TypeScript · Tailwind CSS v4
-- File/memory order store (`data/orders.json` locally; in-memory fallback on read-only FS)
-- No required API keys — assist is rule-based against the seeded catalogue
+Next.js App Router · TypeScript · Tailwind v4 · npm · file/memory orders · **no API keys required**
 
-## Run locally
+## Run
 
 ```bash
-cd /Users/manglekuo/dev/CursorHack   # or your clone path
+cd ~/dev/CursorHack
 npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-Production build:
-
-```bash
-npm run build && npm start
+npm run dev      # http://localhost:3000
+npm run build
 ```
 
 ## Env vars
 
-Copy `.env.example` if you want placeholders. **Nothing is required for the demo.**
-
-| Variable | Required | Notes |
-|----------|----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | No | Optional future wire-up |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No | Optional |
-| `SUPABASE_SERVICE_ROLE_KEY` | No | Optional — never commit real keys |
+Optional only — copy `.env.example`. Demo runs without Supabase keys.
 
 ## 3-minute demo script
 
-**User:** London shopper who wants quality second-hand denim without guessing size/condition — and hates coupon theatre.
+**User:** Sam Okonkwo — returning London shopper (W31, APC/Nudie, budget £90). Abandoned £95 APC last week.
 
-**Pain:** Marketplaces feel either “full price, hope it fits” or “fake 40% off.” Complementary pieces sit unsold.
+**Pain:** Cold-start marketplaces ignore fit history; “deals” are static coupons, not live negotiation.
 
-**Live flow (happy path):**
+**Live flow:**
 
-1. **Home** (`/`) — skim hero pairs + perk pool.
-2. Open **Fit assist** (bottom-right) → ask `W31 very good` → click a quick link (e.g. Nudie / Edwin).
-3. On the **product** page → scroll to **New Ways to Buy → Pair & Perk** → select a free complementary perk → **Continue to checkout**.
-4. **Checkout** — confirm prefilled buyer → **Confirm Pair & Perk order**.
-5. **Order confirm** — see primary paid + perk free + savings.
-6. **Merchant** (`/merchant`) — same order appears with `pair-and-perk` badge; advance status Confirmed → Packed → Shipped.
+1. **Home** — point at the **Remembered profile** banner (fit, brands, past purchases, last session).
+2. **Negotiate on A.P.C.** → `/product/apc-petit-new#negotiate` → **Start live negotiation** (desk greets Sam with past context).
+3. On stage: **Too pricey — knock £10 off** → optional **Better free perk?** → **Apply deal → checkout**.
+4. Checkout prefilled as Sam → **Confirm negotiated order**.
+5. **Merchant** — order shows `negotiated-pair-and-perk` + negotiation summary.
 
-**Benefit:** One clear negotiation/bundle mechanic (pay full for hero → complementary add-on free) plus real assist UI that reads waist/condition and the live catalogue — merchants see the attribution.
+**Benefit:** Past personal context + visible back-and-forth → landed Pair & Perk the merchant can see.
 
 ## Exact click-path
 
-`/` → product (e.g. `/product/apc-petit-new` or `/product/nudie-lean-dean`) → `#new-ways` Pair & Perk → pick perk → Checkout → Confirm → `/order/[id]` → `/merchant`
-
-## Seeded catalogue
-
-12 UK-priced second-hand jeans (heroes + perk-eligible). See `src/lib/products.ts`.
-
-## Vercel
-
-Push `dev` (or `main`), import the GitHub repo in Vercel, framework preset Next.js — no env vars required for the demo.
+`/` → Sam banner → `/product/apc-petit-new#negotiate` → Start → counter on price/perk → Apply deal → Confirm → `/merchant`

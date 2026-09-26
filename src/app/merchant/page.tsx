@@ -22,7 +22,7 @@ export default async function MerchantPage() {
             Indigo Lane desk
           </h1>
           <p className="mt-1 text-sm text-stone-600">
-            Shared catalogue + live Pair &amp; Perk orders (file/memory store)
+            Shared catalogue · negotiated Pair &amp; Perk orders (file/memory store)
           </p>
         </div>
         <Link
@@ -57,8 +57,8 @@ export default async function MerchantPage() {
         <h2 className="text-xl font-semibold text-indigo-950">Incoming orders</h2>
         {orders.length === 0 ? (
           <p className="mt-4 rounded-2xl border border-dashed border-stone-300 bg-white/50 px-5 py-8 text-center text-sm text-stone-500">
-            No orders yet. Run the consumer happy path: home → product → Pair
-            &amp; Perk → checkout.
+            No orders yet. Demo path: home (Sam context) → product → live
+            negotiate → checkout → land here.
           </p>
         ) : (
           <div className="mt-4 space-y-4">
@@ -107,6 +107,19 @@ export default async function MerchantPage() {
                     </li>
                   ))}
                 </ul>
+                {order.negotiationSummary && (
+                  <p className="mt-3 rounded-lg bg-indigo-50 px-3 py-2 text-xs text-indigo-900">
+                    <span className="font-semibold">Negotiation: </span>
+                    {order.negotiationSummary}
+                    {(order.discount ?? 0) > 0 && (
+                      <span>
+                        {" "}
+                        · list {gbp(order.listPrice ?? order.total)} → paid{" "}
+                        {gbp(order.total)} (−{gbp(order.discount)})
+                      </span>
+                    )}
+                  </p>
+                )}
                 <MerchantActions orderId={order.id} status={order.status} />
               </article>
             ))}

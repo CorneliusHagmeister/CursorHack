@@ -1,9 +1,9 @@
 import Link from "next/link";
-
-export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { getOrder } from "@/lib/store";
 import { gbp, formatWhen } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
 
 export default async function OrderPage({
   params,
@@ -13,6 +13,8 @@ export default async function OrderPage({
   const { id } = await params;
   const order = await getOrder(id);
   if (!order) notFound();
+
+  const negotiated = order.mechanic === "negotiated-pair-and-perk";
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
@@ -27,6 +29,18 @@ export default async function OrderPage({
           {formatWhen(order.createdAt)} · shipping to {order.shippingCity}
         </p>
         <p className="mt-1 font-mono text-xs text-stone-500">{order.id}</p>
+        <p className="mt-2 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-amber-900">
+          {order.mechanic}
+        </p>
+
+        {order.negotiationSummary && (
+          <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-3 text-sm text-indigo-950">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-indigo-700">
+              From live negotiation
+            </p>
+            <p className="mt-1">{order.negotiationSummary}</p>
+          </div>
+        )}
 
         <ul className="mt-8 space-y-3">
           {order.items.map((item) => (
@@ -41,7 +55,9 @@ export default async function OrderPage({
                 <p className="text-xs text-stone-500">
                   {item.role === "perk"
                     ? "Pair & Perk · complementary free"
-                    : "Primary · full price"}
+                    : negotiated
+                      ? "Primary · negotiated"
+                      : "Primary · full price"}
                 </p>
               </div>
               <p className="tabular-nums font-medium">{gbp(item.price)}</p>
@@ -49,15 +65,23 @@ export default async function OrderPage({
           ))}
         </ul>
 
-        <div className="mt-6 flex items-center justify-between border-t border-stone-200 pt-4">
-          <span className="text-stone-600">Total paid</span>
-          <span className="text-2xl font-semibold tabular-nums text-indigo-950">
-            {gbp(order.total)}
-          </span>
+        <div className="mt-6 space-y-1 border-t border-stone-200 pt-4 text-sm">
+          {(order.discount ?? 0) > 0 && (
+            <div className="flex justify-between text-indigo-700">
+              <span>List {gbp(order.listPrice ?? order.total)} → negotiated</span>
+              <span>−{gbp(order.discount)}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between">
+            <span className="text-stone-600">Total paid</span>
+            <span className="text-2xl font-semibold tabular-nums text-indigo-950">
+              {gbp(order.total)}
+            </span>
+          </div>
         </div>
         {order.perkSavings > 0 && (
           <p className="mt-1 text-right text-sm text-emerald-700">
-            You saved {gbp(order.perkSavings)} with Pair &amp; Perk
+            Perk value gifted {gbp(order.perkSavings)}
           </p>
         )}
 
