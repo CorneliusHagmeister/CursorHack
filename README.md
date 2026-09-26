@@ -34,3 +34,25 @@ Sam Okonkwo, London, waist 31, A.P.C. and Nudie, budget £90. He left an A.P.C. 
 5. Merchant shows `negotiated-pair-and-perk` and the negotiation summary.
 
 Click path: `/`, Sam strip and the abandoned £95 cart, `/product/apc-petit-new#negotiate`, Start, Knock £10 off, Apply deal, Confirm, `/merchant`. Merchant already has one shipped Nudie order so GMV is not £0.
+
+## Negotiation API (for ChatGPT / Claude agents)
+
+Full reference: [docs/negotiation-api.md](docs/negotiation-api.md).
+
+Agents haggle with the merchant on a shopper's behalf. **Prices are decided deterministically** in [`src/lib/negotiation/engine.ts`](src/lib/negotiation/engine.ts) (hidden floor per product, concession curve, best-and-final after 4 rounds, Pair & Perk bundle as a lever). **Claude only phrases the reply** ([`voice.ts`](src/lib/negotiation/voice.ts)) via Vercel AI Gateway (`AI_GATEWAY_API_KEY`) or the Claude API (`ANTHROPIC_API_KEY`); a reply that mentions any £ amount the engine didn't produce is replaced by a template.
+
+| Method | Path | operationId |
+|---|---|---|
+| GET | `/api/products` | `listProducts` |
+| POST | `/api/negotiations` `{productId, buyerName?, perkId?}` | `startNegotiation` |
+| GET | `/api/negotiations/{id}` | `getNegotiation` |
+| POST | `/api/negotiations/{id}/messages` `{message, counterOffer?, includePerk?, perkId?, acceptOfferId?}` | `sendNegotiationMessage` |
+| POST | `/api/negotiations/{id}/purchase` `{price, buyerName, buyerEmail, shippingCity}` | `purchaseNegotiatedDeal` |
+| GET | `/api/openapi.json` | OpenAPI 3.1 spec |
+
+**ChatGPT:** create a GPT → Actions → Import from URL → `https://<deployment>/api/openapi.json` (auth: none). Purchase is marked `x-openai-isConsequential`, so ChatGPT asks before buying. Needs a public URL (Vercel or a tunnel).
+
+```bash
+curl -X POST localhost:3000/api/negotiations -H 'content-type: application/json' -d '{"productId":"apc-petit-new"}'
+curl -X POST localhost:3000/api/negotiations/<id>/messages -H 'content-type: application/json' -d '{"message":"Would you do 75?","counterOffer":75}'
+```
