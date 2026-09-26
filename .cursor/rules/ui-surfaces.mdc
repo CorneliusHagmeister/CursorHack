@@ -1,0 +1,36 @@
+---
+description: UI surfaces — spacing before borders, one elevation, one label
+globs: src/**/*.{tsx,css}
+alwaysApply: false
+---
+
+# Surfaces
+
+Separate regions with the first tool that works. Stop there:
+
+1. Gap or spacing
+2. Color or opacity
+3. Visual weight
+4. Font size or weight
+5. A light background fill
+6. A border
+7. A divider — only when spacing cannot show the boundary, such as a dense table
+
+A border plus a background is one raised level. Use at most one raised region per screen (a movable card or a single focal panel), and pair it with a shadow. Do not nest a bordered filled card inside another. Group the rest with spacing, one border, or a light fill.
+
+A page, section, panel, dialog, or list row gets a title or a description, never both. If both feel necessary, merge them into one line.
+
+```tsx
+// ❌ nested cards, and a kicker that repeats the heading
+<section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+  <p className="text-xs font-semibold uppercase">Shopper</p>
+  <h2 className="text-xl font-semibold">Returning shopper</h2>
+  <div className="mt-3 rounded-xl border border-stone-200 bg-white p-3">…</div>
+</section>
+
+// ✅ one heading, related items grouped by gap
+<section className="py-8">
+  <h2 className="text-xl font-semibold text-indigo-950">Returning shopper</h2>
+  <dl className="mt-4 flex gap-6 text-sm text-stone-600">…</dl>
+</section>
+```

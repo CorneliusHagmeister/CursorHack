@@ -1,0 +1,24 @@
+---
+description: UI labels and icons — no wide-tracked eyebrows, one icon weight
+globs: src/**/*.{tsx,css}
+alwaysApply: false
+---
+
+# Labels and icons
+
+Do not place a small uppercase label (`text-xs` / `text-sm`, about 14px or less) with letter-spacing at or above `0.1em` (`tracking-widest`, `tracking-[0.1em]`, `tracking-[0.2em]`, `tracking-[0.25em]`) directly above a heading. Fold those words into the heading or the body. Status, a release version, and a real breadcrumb may stay, at normal tracking.
+
+This app has no icon set. Do not add emoji, Unicode arrows, or ad-hoc glyphs as icons. If an icon is required, use Lucide only, at the same size and weight as the label beside it.
+
+```tsx
+// ❌ eyebrow above the hero
+<p className="text-xs font-semibold uppercase tracking-[0.25em] text-indigo-800">
+  Fleek · New Ways to Buy
+</p>
+<h1 className="mt-3 text-4xl font-semibold">Negotiate live</h1>
+
+// ✅ one heading
+<h1 className="text-4xl font-semibold tracking-tight text-indigo-950">
+  Negotiate live, with context from the past
+</h1>
+```

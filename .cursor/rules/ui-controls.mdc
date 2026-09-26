@@ -1,0 +1,36 @@
+---
+description: Form controls match the option count and sit with what they change
+globs: src/**/*.{tsx,css}
+alwaysApply: false
+---
+
+# Controls
+
+Pick the control from how many options there are. A dropdown is the last resort.
+
+| Situation | Use |
+|---|---|
+| Two exclusive states | Switch or toggle |
+| Under about 5 exclusive options | Radios or a segmented control, all visible |
+| Independent options, any number | Checkboxes |
+| About 5–15 options, one choice, tight space | Select |
+| 15 or more | Combobox with search |
+
+Put the control in the same group as the thing it changes, or on that group's edge. Two unrelated groups need their own spacing or heading. Use `fieldset` and `legend` for a real set of fields.
+
+```tsx
+// ❌ a select hiding two brands, away from the pair it filters
+<select aria-label="Brand">
+  <option>Levi&apos;s</option>
+  <option>Carhartt</option>
+</select>
+
+// ✅ both brands visible, labeled with the catalogue they filter
+<fieldset>
+  <legend className="text-sm font-medium text-indigo-950">Brand</legend>
+  <div className="mt-2 flex gap-2">
+    <label className="text-sm"><input type="radio" name="brand" /> Levi&apos;s</label>
+    <label className="text-sm"><input type="radio" name="brand" /> Carhartt</label>
+  </div>
+</fieldset>
+```
