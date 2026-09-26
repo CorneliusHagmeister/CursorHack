@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Zilla_Slab } from "next/font/google";
+import Link from "next/link";
+import { Archivo, Geist_Mono, Zilla_Slab } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { Header } from "@/components/Header";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  axes: ["wdth"],
 });
 
 const zillaSlab = Zilla_Slab({
@@ -26,6 +28,13 @@ export const metadata: Metadata = {
     "A clothes shop where everything takes offers. Haggle yourself or send your AI assistant, and get a deal back instead of a flat no.",
 };
 
+const FOOTER_LINKS = [
+  { href: "/", label: "Shop" },
+  { href: "/account", label: "Account" },
+  { href: "/merchant", label: "Sell" },
+  { href: "/api/md", label: "For agents" },
+];
+
 export default function RootLayout({
   children,
 }: {
@@ -34,15 +43,22 @@ export default function RootLayout({
   return (
     <html
       lang="en-GB"
-      className={`${geistSans.variable} ${geistMono.variable} ${zillaSlab.variable} h-full antialiased`}
+      className={`${archivo.variable} ${geistMono.variable} ${zillaSlab.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#faf9f7] text-stone-900">
-        <Suspense fallback={<div className="h-14 border-b border-stone-200 bg-white" />}>
+      <body className="flex min-h-full flex-col bg-floor text-ink">
+        <Suspense fallback={<div className="mx-3 mt-3 h-14 rounded-tile bg-white" />}>
           <Header />
         </Suspense>
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-stone-200 py-6 text-center text-xs text-stone-500">
-          Haggleberry · clothes, open to offers
+        <footer className="m-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-tile bg-white px-4 py-3">
+          <span className="text-caps">Haggleberry · clothes, open to offers</span>
+          <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-1">
+            {FOOTER_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className="text-caps text-muted hover:text-ink">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </footer>
       </body>
     </html>

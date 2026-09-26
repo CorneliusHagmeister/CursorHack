@@ -28,20 +28,17 @@ export function AuthMenu() {
     return (
       <Link
         href="/account"
-        className="inline-flex items-center gap-1.5 rounded-full bg-stone-900 px-3 py-1.5 text-xs font-medium text-white"
+        className="text-caps inline-flex items-center gap-1.5 rounded-tile bg-ink px-2.5 py-1.5 text-white"
         aria-label={`Signed in as ${me.name ?? "shopper"}`}
       >
-        <User className="h-3.5 w-3.5" aria-hidden />
+        <User className="h-3 w-3" aria-hidden />
         {me.name?.split(" ")[0] ?? "Account"}
       </Link>
     );
   }
 
   return (
-    <Link
-      href="/login"
-      className="rounded-full border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-800 hover:bg-stone-50"
-    >
+    <Link href="/login" className="text-caps rounded-tile px-2.5 py-1.5 text-ink hover:bg-floor">
       Sign in
     </Link>
   );

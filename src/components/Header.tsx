@@ -1,80 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState } from "react";
-import { Search } from "lucide-react";
 import { AuthMenu } from "@/components/AuthMenu";
+import { SearchBox } from "@/components/SearchBox";
 
 const CUTS = ["Straight", "Slim", "Relaxed", "Wide"] as const;
 
 export function Header() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [q, setQ] = useState(searchParams.get("q") ?? "");
-
-  const handleSearch = (e: FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams(searchParams.toString());
-    if (q.trim()) params.set("q", q.trim());
-    else params.delete("q");
-    router.push(`/?${params.toString()}`);
-  };
-
   return (
-    <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-        <Link
-          href="/"
-          className="flex items-center gap-2 font-slab text-xl font-bold text-rinse"
-        >
+    <header className="sticky top-3 z-40 mx-3 mt-3 rounded-tile bg-white">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
+        <Link href="/" className="flex items-center gap-2 font-display text-lg italic tracking-tight text-ink">
           <img
             src="/haggleberry-mark.svg"
             alt=""
             width={39}
             height={32}
-            className="h-8 w-auto shrink-0"
+            className="h-7 w-auto shrink-0"
             aria-hidden
           />
           Haggleberry
         </Link>
 
-        <form
-          onSubmit={handleSearch}
-          className="order-last flex w-full basis-full items-center gap-2 rounded-full border border-stone-200 bg-stone-50 px-3 py-2 sm:order-0 sm:max-w-md sm:basis-auto"
-          role="search"
-        >
-          <Search className="h-4 w-4 shrink-0 text-stone-400" aria-hidden />
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search brand, wash, city"
-            aria-label="Search the catalogue"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-stone-400"
-          />
-        </form>
+        <SearchBox />
 
-        <nav className="ml-auto flex items-center gap-1 text-sm sm:gap-2">
-          <Link
-            href="/?cut=Straight"
-            className="hidden rounded-full px-2.5 py-1.5 text-stone-600 hover:bg-stone-100 md:inline"
-          >
-            Straight
-          </Link>
-          {CUTS.slice(1).map((cut) => (
+        <nav aria-label="Cuts and account" className="ml-auto flex items-center gap-1">
+          {CUTS.map((cut, index) => (
             <Link
               key={cut}
               href={`/?cut=${encodeURIComponent(cut)}`}
-              className="hidden rounded-full px-2.5 py-1.5 text-stone-600 hover:bg-stone-100 lg:inline"
+              className={`text-caps hidden rounded-tile px-2 py-1.5 text-ink hover:bg-floor ${
+                index === 0 ? "md:inline" : "lg:inline"
+              }`}
             >
               {cut}
             </Link>
           ))}
-          <Link
-            href="/merchant"
-            className="rounded-full px-2.5 py-1.5 text-stone-600 hover:bg-stone-100"
-          >
+          <Link href="/merchant" className="text-caps rounded-tile px-2 py-1.5 text-ink hover:bg-floor">
             Sell
           </Link>
           <AuthMenu />
