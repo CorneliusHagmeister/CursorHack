@@ -1,60 +1,43 @@
-# Handoff — continue in Cursor
+# IDE handoff — Indigo Lane
 
-**When:** Sat 26 Sep 2026 · mid-hack · freeze **16:30 London**  
-**Repo:** `/Users/manglekuo/dev/CursorHack` · branch **`dev`** · https://github.com/CorneliusHagmeister/CursorHack
+**Continue in Cursor IDE from here. Do not rewrite the app from scratch.**
 
-Read [CONTEXT.md](./CONTEXT.md) for event, judges, product spine and routes.
+| | |
+|---|---|
+| **Path** | `~/dev/CursorHack` (`/Users/manglekuo/dev/CursorHack`) |
+| **Branch** | `dev` (track `origin/dev`) |
+| **Remote** | `https://github.com/CorneliusHagmeister/CursorHack.git` |
+| **Freeze** | 16:30 London |
 
-## Current state
+## Shipped (on disk / pushing)
 
-Shipped on `dev` (commit `ee228d0` and later):
+- Next.js storefront + merchant, 12 seeded UK jeans, Pair & Perk static flow
+- **Returning shopper** Sam Okonkwo (`src/lib/shopper.ts`) + header/home/product context UI
+- **Live NegotiatePanel** + `/api/negotiate` + checkout/orders accept negotiated price/summary
+- Fit assist FAB (rule-based)
+- README (may lag — prefer CONTEXT.md spine)
 
-- Indigo Lane Next.js storefront + merchant dashboard
-- 12 seeded UK second-hand jeans
-- **Pair & Perk** New Ways to Buy end-to-end into checkout
-- Fit assist chat (`/api/assist`)
-- `npm run build` was green at scaffold
+## In-flight / finish before freeze
 
-**In flight / likely dirty working tree** (personal context + live negotiation):
+1. **Merchant + order confirm** — display `negotiationSummary`, `discount`, `listPrice`, mechanic badge for negotiated orders (types already extended; UI may still be old).
+2. **`npm run build`** — must pass after Order type change (`listPrice`/`discount` required on create).
+3. **README** — tighten 3-min script to: returning shopper → remembered context → live negotiate → Pair & Perk land → merchant proof.
+4. Ignore stray `pnpm-*` if present unless you intentionally switch PMs — project uses **npm**.
 
-- `src/lib/shopper.ts`, `src/components/ShopperContext.tsx`
-- `src/lib/negotiate.ts`, `src/components/NegotiatePanel.tsx`, `src/app/api/negotiate/`
-- Edits to home, product PDP, checkout, header, orders API, types
+## Demo click-path (memorise)
 
-Finish that path before polish: returning shopper visible → multi-turn negotiate → apply deal → merchant shows order.
+`/` → show Sam banner → `/product/apc-petit-new#negotiate` → Start → “Too pricey — knock £10 off” → Apply deal → checkout Confirm → Merchant.
 
-## Demo click-path (target)
-
-1. Open `/` as returning shopper — **show remembered size/brands/past buys**.
-2. Open a hero product (e.g. `/product/apc-petit-new` or `/product/nudie-lean-dean`).
-3. **Negotiate live** (panel/chat) — counters on perk / price / condition using personal context.
-4. Lock Pair & Perk → checkout → confirm.
-5. Flip to `/merchant` — same order, `pair-and-perk` (or negotiated) attribution.
-
-## Do next (priority before freeze)
-
-1. Land personal context + live negotiation; commit + push `dev`.
-2. Keep one happy path bulletproof for a 3-minute stage demo.
-3. Optional: Vercel preview URL; richer images; tighten README script to memory → negotiate → merchant.
-4. Do **not** rewrite the app from scratch or add required API keys.
-
-## Commands
+## npm
 
 ```bash
-cd /Users/manglekuo/dev/CursorHack
-git checkout dev
 npm run dev
 npm run build
-git add -A && git commit -m "…" && git push origin dev
 ```
 
 ## What not to rewrite
 
-- Pair & Perk as the New Ways to Buy mechanic
-- Two-sided consumer ↔ merchant shared orders
-- Seeded denim catalogue approach
-- Demo spine: **past personal context → live negotiation → merchant proof**
-
-## Cloud agents note
-
-Cursor cloud agents may lack GitHub app access to this repo even when local `gh` has WRITE. Prefer local / IDE Cursor on this clone, or grant repo access in Cursor’s GitHub integration if launching cloud agents.
+- Don’t replace catalogue seed, Pair & Perk mechanic, or file/memory store with a new stack.
+- Don’t invent API keys / real LLM calls for the stage demo.
+- Don’t clone elsewhere; stay on `dev`.
+- Don’t remove ShopperContext / NegotiatePanel — they are the Fleek “past context + live interaction” proof.

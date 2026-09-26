@@ -12,9 +12,36 @@ export type Product = {
   condition: Condition;
   description: string;
   city: string;
-  perkEligible: boolean; // can be claimed free via Pair & Perk
-  accent: string; // CSS colour for card art
+  perkEligible: boolean;
+  accent: string;
   tags: string[];
+};
+
+export type PastPurchase = {
+  productId?: string;
+  brand: string;
+  name: string;
+  waist: number;
+  condition: Condition;
+  price: number;
+  purchasedAt: string; // ISO date
+  note: string;
+};
+
+export type ShopperProfile = {
+  id: string;
+  name: string;
+  email: string;
+  city: string;
+  waist: number;
+  length: number;
+  preferredBrands: string[];
+  minCondition: Condition;
+  budgetMax: number;
+  styleLikes: string[];
+  pastPurchases: PastPurchase[];
+  returningVisits: number;
+  lastSeenNote: string;
 };
 
 export type OrderItem = {
@@ -35,9 +62,13 @@ export type Order = {
   subtotal: number;
   perkSavings: number;
   total: number;
-  mechanic: "pair-and-perk";
+  listPrice: number;
+  discount: number;
+  mechanic: "pair-and-perk" | "negotiated-pair-and-perk";
   status: "confirmed" | "packed" | "shipped";
   note?: string;
+  negotiationSummary?: string;
+  shopperId?: string;
 };
 
 export type AssistMessage = {
@@ -50,4 +81,36 @@ export type AssistRequest = {
   waist?: number;
   preferredCondition?: Condition;
   productId?: string;
+};
+
+/** Deal state produced by live negotiation */
+export type NegotiatedDeal = {
+  primaryId: string;
+  perkId: string | null;
+  listPrice: number;
+  negotiatedPrice: number;
+  perkLabel: string | null;
+  summary: string;
+  concessions: string[];
+};
+
+export type NegotiateMessage = {
+  role: "user" | "assistant" | "system";
+  content: string;
+};
+
+export type NegotiateRequest = {
+  productId: string;
+  message: string;
+  history: NegotiateMessage[];
+  /** Current working deal from prior turns */
+  deal?: NegotiatedDeal | null;
+};
+
+export type NegotiateResponse = {
+  /** Stepwise bubbles to reveal live on stage */
+  steps: string[];
+  deal: NegotiatedDeal;
+  quickReplies: string[];
+  canApply: boolean;
 };

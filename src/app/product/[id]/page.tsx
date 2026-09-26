@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PairAndPerk } from "@/components/PairAndPerk";
+import { NegotiatePanel } from "@/components/NegotiatePanel";
 import { getPerkOptions, getProduct } from "@/lib/products";
+import { getShopper } from "@/lib/shopper";
 import { gbp } from "@/lib/format";
 
 export default async function ProductPage({
@@ -13,6 +15,13 @@ export default async function ProductPage({
   const product = getProduct(id);
   if (!product) notFound();
   const perkOptions = getPerkOptions(id);
+  const shopper = getShopper();
+  const brandMatch = shopper.preferredBrands.some(
+    (b) =>
+      product.brand.toLowerCase().includes(b.toLowerCase().replace(" jeans", "")) ||
+      b.toLowerCase().includes(product.brand.toLowerCase())
+  );
+  const waistDelta = Math.abs(product.waist - shopper.waist);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -22,6 +31,14 @@ export default async function ProductPage({
         </Link>{" "}
         / {product.brand}
       </p>
+
+      <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-950">
+        <strong>{shopper.name.split(" ")[0]}&apos;s context:</strong> W
+        {shopper.waist} vs listed W{product.waist}
+        {waistDelta === 0 ? " (exact)" : ` (Δ${waistDelta})`}
+        {brandMatch ? " · preferred brand match" : ""} · budget{" "}
+        {gbp(shopper.budgetMax)} · floor {shopper.minCondition}
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div
@@ -81,16 +98,28 @@ export default async function ProductPage({
             {product.description}
           </p>
 
-          <a
-            href="#new-ways"
-            className="mt-8 inline-flex w-fit rounded-full bg-indigo-950 px-5 py-2.5 text-sm font-medium text-amber-50 hover:bg-indigo-900"
-          >
-            Open New Ways to Buy →
-          </a>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href="#negotiate"
+              className="inline-flex rounded-full bg-indigo-950 px-5 py-2.5 text-sm font-medium text-amber-50 hover:bg-indigo-900"
+            >
+              Negotiate live →
+            </a>
+            <a
+              href="#new-ways"
+              className="inline-flex rounded-full border border-stone-300 px-5 py-2.5 text-sm font-medium text-stone-700 hover:bg-white"
+            >
+              Static Pair &amp; Perk
+            </a>
+          </div>
         </div>
       </div>
 
       <div className="mt-12">
+        <NegotiatePanel primary={product} />
+      </div>
+
+      <div className="mt-10">
         <PairAndPerk primary={product} perkOptions={perkOptions} />
       </div>
     </div>

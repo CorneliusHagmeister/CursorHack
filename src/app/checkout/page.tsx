@@ -4,6 +4,7 @@ import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PRODUCTS } from "@/lib/products";
+import { RETURNING_SHOPPER } from "@/lib/shopper";
 import { gbp } from "@/lib/format";
 
 function CheckoutForm() {
@@ -11,6 +12,11 @@ function CheckoutForm() {
   const router = useRouter();
   const primaryId = params.get("primary") ?? "";
   const perkId = params.get("perk");
+  const negotiated = params.get("negotiated") === "1";
+  const priceParam = params.get("price");
+  const listParam = params.get("list");
+  const summary = params.get("summary") ?? "";
+  const concessions = params.get("concessions") ?? "";
 
   const primary = useMemo(
     () => PRODUCTS.find((p) => p.id === primaryId),
@@ -21,10 +27,18 @@ function CheckoutForm() {
     [perkId]
   );
 
-  const [buyerName, setBuyerName] = useState("Alex Mercer");
-  const [buyerEmail, setBuyerEmail] = useState("alex@example.com");
-  const [shippingCity, setShippingCity] = useState("London");
-  const [note, setNote] = useState("Leave with neighbour if out");
+  const listPrice = listParam ? Number(listParam) : primary?.price ?? 0;
+  const payPrice = priceParam ? Number(priceParam) : primary?.price ?? 0;
+
+  const s = RETURNING_SHOPPER;
+  const [buyerName, setBuyerName] = useState(s.name);
+  const [buyerEmail, setBuyerEmail] = useState(s.email);
+  const [shippingCity, setShippingCity] = useState(s.city);
+  const [note, setNote] = useState(
+    negotiated
+      ? `Negotiated deal for returning shopper ${s.name.split(" ")[0]}`
+      : "Leave with neighbour if out"
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +67,11 @@ function CheckoutForm() {
           buyerEmail,
           shippingCity,
           note,
+          negotiatedPrice: payPrice,
+          listPrice,
+          negotiationSummary: summary || undefined,
+          concessions: concessions || undefined,
+          negotiated,
         }),
       });
       const data = await res.json();
@@ -65,17 +84,36 @@ function CheckoutForm() {
   }
 
   const perkSavings = perk?.price ?? 0;
+  const discount = Math.max(0, listPrice - payPrice);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="text-3xl font-semibold text-indigo-950">Checkout</h1>
       <p className="mt-1 text-sm text-stone-600">
-        Pair &amp; Perk · pay full price on primary
+        {negotiated
+          ? "Negotiated Pair & Perk · returning shopper profile prefilled"
+          : "Pair & Perk · pay on primary"}
         {perk ? ", complementary perk free" : ""}
       </p>
 
+      {negotiated && summary && (
+        <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-indigo-700">
+            Deal from live negotiation
+          </p>
+          <p className="mt-1 font-medium">{summary}</p>
+          {concessions && (
+            <p className="mt-1 text-xs text-indigo-800">↔ {concessions}</p>
+          )}
+        </div>
+      )}
+
       <div className="mt-8 grid gap-6 lg:grid-cols-5">
         <div className="space-y-4 lg:col-span-3">
+          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+            Prefill from remembered profile · {s.name} · W{s.waist} ·{" "}
+            {s.preferredBrands.slice(0, 2).join(" / ")}
+          </p>
           <label className="block text-sm">
             <span className="text-stone-600">Name</span>
             <input
@@ -121,9 +159,18 @@ function CheckoutForm() {
                 <span className="font-medium text-indigo-950">
                   {primary.brand} {primary.name}
                 </span>
-                <span className="block text-xs text-stone-500">Primary</span>
+                <span className="block text-xs text-stone-500">
+                  Primary{negotiated ? " · negotiated" : ""}
+                </span>
               </span>
-              <span className="tabular-nums">{gbp(primary.price)}</span>
+              <span className="text-right tabular-nums">
+                {discount > 0 && (
+                  <span className="block text-xs line-through text-stone-400">
+                    {gbp(listPrice)}
+                  </span>
+                )}
+                {gbp(payPrice)}
+              </span>
             </li>
             {perk && (
               <li className="flex justify-between gap-2 rounded-lg bg-emerald-50 px-2 py-1.5">
@@ -151,15 +198,19 @@ function CheckoutForm() {
                 <span>−{gbp(perkSavings)}</span>
               </div>
             )}
+            {discount > 0 && (
+              <div className="flex justify-between text-indigo-700">
+                <span>Negotiated discount</span>
+                <span>−{gbp(discount)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-lg font-semibold text-indigo-950">
               <span>Total</span>
-              <span className="tabular-nums">{gbp(primary.price)}</span>
+              <span className="tabular-nums">{gbp(payPrice)}</span>
             </div>
           </div>
 
-          {error && (
-            <p className="mt-3 text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
           <button
             type="button"
@@ -167,7 +218,11 @@ function CheckoutForm() {
             onClick={() => void placeOrder()}
             className="mt-5 w-full rounded-full bg-indigo-950 py-2.5 text-sm font-semibold text-amber-50 hover:bg-indigo-900 disabled:opacity-50"
           >
-            {busy ? "Placing order…" : "Confirm Pair & Perk order"}
+            {busy
+              ? "Placing order…"
+              : negotiated
+                ? "Confirm negotiated order"
+                : "Confirm Pair & Perk order"}
           </button>
         </div>
       </div>
@@ -177,7 +232,11 @@ function CheckoutForm() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="p-10 text-center text-stone-500">Loading…</div>}>
+    <Suspense
+      fallback={
+        <div className="p-10 text-center text-stone-500">Loading…</div>
+      }
+    >
       <CheckoutForm />
     </Suspense>
   );

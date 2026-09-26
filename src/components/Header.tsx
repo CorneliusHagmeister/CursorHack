@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { ShopperContextBanner } from "@/components/ShopperContext";
 
 export function Header() {
   return (
-    <header className="border-b border-stone-200/80 bg-[#f7f3ec]/90 backdrop-blur sticky top-0 z-40">
+    <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#f7f3ec]/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link href="/" className="group flex items-baseline gap-2">
           <span className="text-lg font-semibold tracking-tight text-indigo-950 sm:text-xl">
@@ -29,6 +30,11 @@ export function Header() {
             Pair &amp; Perk
           </span>
         </nav>
+      </div>
+      <div className="border-t border-stone-200/60 bg-emerald-50/50">
+        <div className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
+          <ShopperContextBanner compact />
+        </div>
       </div>
     </header>
   );
