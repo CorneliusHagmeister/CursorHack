@@ -44,7 +44,10 @@ export async function GET() {
                 schema: {
                   type: "object",
                   required: ["productId"],
-                  properties: { productId: { type: "string" } },
+                  properties: {
+                    productId: { type: "string" },
+                    message: { type: "string", description: "Optional first message" },
+                  },
                 },
               },
             },
@@ -66,7 +69,17 @@ export async function GET() {
                 schema: {
                   type: "object",
                   required: ["message"],
-                  properties: { message: { type: "string" } },
+                  properties: {
+                    message: { type: "string", description: "Free text, e.g. \"Knock £10 off\", \"£80 with final sale\", \"we'll take the deal\"" },
+                    counterOffer: { type: "number", description: "Optional structured price in GBP" },
+                    offerTerms: {
+                      type: "array",
+                      items: { type: "string", enum: ["final_sale", "standard_shipping", "fit_review", "collect_london"] },
+                      description: "Optional commitments the shopper makes",
+                    },
+                    includePerk: { type: "boolean", description: "Optional: negotiate the Pair & Perk bundle" },
+                    acceptOfferId: { type: "string", description: "Optional: accept negotiation.offers[].offerId" },
+                  },
                 },
               },
             },
@@ -78,6 +91,24 @@ export async function GET() {
         post: {
           summary: "Place order",
           security: [{ bearerAuth: [] }],
+          requestBody: {
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    negotiationId: {
+                      type: "string",
+                      description: "Buy the deal from this negotiation (deal.negotiationId); price comes from the agreed deal",
+                    },
+                    primaryId: { type: "string" },
+                    perkId: { type: "string" },
+                    negotiatedPrice: { type: "number" },
+                  },
+                },
+              },
+            },
+          },
           responses: { "201": { description: "Order created" } },
         },
       },

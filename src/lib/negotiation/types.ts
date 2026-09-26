@@ -45,6 +45,8 @@ export type Negotiation = {
   productId: string;
   listPrice: number;
   buyerName?: string;
+  /** Known shopper (signed in or agent token): lets the merchant talk fit and budget */
+  buyerProfile?: { waist: number; length: number; budgetMax: number; preferredBrands: string[] } | null;
   status: NegotiationStatus;
   round: number; // number of buyer price moves (counters or proposed terms)
   pressure?: number; // times the buyer pushed below what we'd do; unlocks smaller and smaller concessions

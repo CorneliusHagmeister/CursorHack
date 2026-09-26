@@ -1,19 +1,14 @@
 import { getProduct, getPerkOptions, searchProducts } from "../products";
-import { runNegotiate } from "../negotiate";
 import {
   createOrder,
   getOrder as getStoredOrder,
   listOrders as listStoredOrders,
 } from "../store";
 import type {
-  NegotiatedDeal,
-  NegotiateMessage,
-  NegotiateResponse,
   Order,
   OrderChannel,
   Product,
   ProductFilters,
-  ShopperProfile,
 } from "../types";
 
 export function serviceSearchProducts(filters: ProductFilters = {}): Product[] {
@@ -26,24 +21,6 @@ export function serviceGetProduct(id: string): Product | undefined {
 
 export function serviceGetPerkOptions(primaryId: string): Product[] {
   return getPerkOptions(primaryId);
-}
-
-export function serviceNegotiate(input: {
-  productId: string;
-  message?: string;
-  history?: NegotiateMessage[];
-  deal?: NegotiatedDeal | null;
-  shopper?: ShopperProfile | null;
-  campaign?: string | null;
-}): NegotiateResponse {
-  return runNegotiate({
-    productId: input.productId,
-    message: input.message ?? "",
-    history: input.history ?? [],
-    deal: input.deal ?? null,
-    shopper: input.shopper ?? null,
-    campaign: input.campaign ?? null,
-  });
 }
 
 export type PlaceOrderInput = {

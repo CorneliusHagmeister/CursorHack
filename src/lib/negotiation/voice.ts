@@ -126,6 +126,10 @@ function allowedAmounts(
   for (const t of availableTerms(ctx)) amounts.add(t.discount);
   for (const id of availableExtras(ctx)) amounts.add(policy.extras[id].value);
   if (counter != null) amounts.add(counter);
+  if (neg.buyerProfile) {
+    amounts.add(neg.buyerProfile.budgetMax);
+    amounts.add(Math.abs(product.price - neg.buyerProfile.budgetMax));
+  }
   return amounts;
 }
 
@@ -144,7 +148,7 @@ function passesGuard(text: string, allowed: Set<number>): boolean {
 function describeDecision(decision: Decision, counter?: number): string {
   switch (decision.type) {
     case "opening":
-      return "Greet the buyer and present the standing deals (the pair at list, and the full Pair & Perk deal if there is one, leading with its deal value). If WHAT_WE_FLEX_ON has commitments, say briefly you can sharpen the deal for those.";
+      return "Greet the buyer (if BUYER_PROFILE is set, briefly note fit vs their waist and how the list price sits against their budget) and present the standing deals (the pair at list, and the full Pair & Perk deal if there is one, leading with its deal value). If WHAT_WE_FLEX_ON has commitments, say briefly you can sharpen the deal for those.";
     case "accept_offer":
       return "The buyer accepted a deal (first offer). Confirm what they get and what they committed to, and tell them they can complete the purchase.";
     case "accept_counter":
@@ -206,6 +210,8 @@ export async function merchantReply(
     },
     AVOID_SAYING: policy.avoidSaying || null,
     BUYER_NAME: neg.buyerName ?? null,
+    // Known shopper: on opening, briefly mention fit vs their waist and the list price vs their budget
+    BUYER_PROFILE: neg.buyerProfile ?? null,
     RECENT_CONVERSATION: neg.transcript
       .slice(-8, buyerMessage ? -1 : undefined)
       .map((t) => `${t.role}: ${t.text}`),

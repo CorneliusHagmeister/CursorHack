@@ -1,10 +1,10 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 import { resolveShopperContext } from "@/lib/context";
+import { compatPurchase, compatStateless } from "@/lib/negotiation/compat";
 import {
   serviceGetOrder,
   serviceGetProduct,
-  serviceNegotiate,
   servicePlaceOrder,
   serviceSearchProducts,
 } from "@/lib/services";
@@ -70,7 +70,7 @@ const handler = createMcpHandler((server) => {
     {
       title: "Negotiate",
       description:
-        "Start or continue a live offer on a product. Pass an empty message to open.",
+        "Start or continue a deal on a product. Pass an empty message to open. The merchant sells deals, not discounts: it trades price for commitments (final sale, standard shipping, fit review, collect in London) and adds value (free Pair & Perk pair, free hemming). Pass back deal.negotiationId to continue the same negotiation.",
       inputSchema: z.object({
         productId: z.string(),
         message: z.string().default(""),
@@ -78,24 +78,48 @@ const handler = createMcpHandler((server) => {
           .string()
           .optional()
           .describe("Bearer token for the shopper agent"),
+        negotiationId: z
+          .string()
+          .optional()
+          .describe("Continue this negotiation (from deal.negotiationId)"),
+        counterOffer: z.number().optional().describe("Price in GBP the shopper proposes"),
+        offerTerms: z
+          .array(z.enum(["final_sale", "standard_shipping", "fit_review", "collect_london"]))
+          .optional()
+          .describe("Commitments the shopper will make"),
+        includePerk: z.boolean().optional().describe("Negotiate the Pair & Perk bundle"),
+        acceptOfferId: z.string().optional().describe("Accept one of negotiation.offers[].offerId"),
       }),
     },
-    async ({ productId, message, authorization }) => {
+    async ({ productId, message, authorization, negotiationId, counterOffer, offerTerms, includePerk, acceptOfferId }) => {
       const ctx = await resolveShopperContext({
         authorization: authorization
           ? `Bearer ${authorization.replace(/^Bearer\s+/i, "")}`
           : null,
       });
-      const result = serviceNegotiate({
-        productId,
-        message,
-        history: [],
-        shopper: ctx.shopper ?? null,
-        campaign: ctx.campaign ?? null,
-      });
-      return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      const structured = {
+        ...(counterOffer != null ? { counterOffer } : {}),
+        ...(offerTerms?.length ? { offerTerms } : {}),
+        ...(includePerk != null ? { includePerk } : {}),
+        ...(acceptOfferId ? { acceptOfferId } : {}),
       };
+      try {
+        const result = await compatStateless({
+          productId,
+          message,
+          negotiationId: negotiationId ?? null,
+          shopper: ctx.shopper ?? null,
+          structured: Object.keys(structured).length ? structured : undefined,
+        });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
+      } catch (err) {
+        return {
+          content: [{ type: "text", text: err instanceof Error ? err.message : "Negotiation failed" }],
+          isError: true,
+        };
+      }
     }
   );
 
@@ -111,6 +135,10 @@ const handler = createMcpHandler((server) => {
         listPrice: z.number().optional(),
         negotiationSummary: z.string().optional(),
         authorization: z.string().optional(),
+        negotiationId: z
+          .string()
+          .optional()
+          .describe("Buy the deal from this negotiation (from deal.negotiationId); price comes from the agreed deal"),
       }),
     },
     async (input) => {
@@ -120,6 +148,23 @@ const handler = createMcpHandler((server) => {
           : null,
       });
       const shopper = ctx.shopper ?? RETURNING_SHOPPER;
+      if (input.negotiationId) {
+        try {
+          const { order } = await compatPurchase({
+            negotiationId: input.negotiationId,
+            buyerName: shopper.name,
+            buyerEmail: shopper.email,
+            shippingCity: shopper.city,
+            note: "Ordered via MCP connector",
+          });
+          return { content: [{ type: "text", text: JSON.stringify({ order }, null, 2) }] };
+        } catch (err) {
+          return {
+            content: [{ type: "text", text: err instanceof Error ? err.message : "Order failed" }],
+            isError: true,
+          };
+        }
+      }
       const order = await servicePlaceOrder({
         primaryId: input.primaryId,
         perkId: input.perkId,

@@ -111,6 +111,7 @@ export async function startNegotiation(input: {
   productId: string;
   buyerName?: string;
   perkId?: string;
+  buyerProfile?: Negotiation["buyerProfile"];
 }) {
   const ctx = await pricing(input.productId);
   let neg = newNegotiation(ctx, input);
@@ -135,7 +136,7 @@ export async function startNegotiation(input: {
 /** A fresh, unsaved negotiation (also used by the merchant simulator) */
 export function newNegotiation(
   ctx: PricingContext,
-  input: { buyerName?: string; perkId?: string } = {}
+  input: { buyerName?: string; perkId?: string; buyerProfile?: Negotiation["buyerProfile"] } = {}
 ): Negotiation {
   const { product } = ctx;
   const now = new Date();
@@ -144,6 +145,7 @@ export function newNegotiation(
     productId: product.id,
     listPrice: product.price,
     buyerName: input.buyerName,
+    buyerProfile: input.buyerProfile ?? null,
     status: "open",
     ...openingTerms(ctx, input.perkId),
     agreed: null,
@@ -163,6 +165,7 @@ export async function sendMessage(id: string, turn: BuyerTurn) {
   // while the merchant reply is being written
   await saveNegotiation(next, { newEntries: 1 });
   const reply = await merchantReply(next, decision, ctx, turn.message, turn.counterOffer);
+  const dealOffer = offerFor(decision, next);
   const neg: Negotiation = {
     ...next,
     updatedAt: new Date().toISOString(),
@@ -172,7 +175,7 @@ export async function sendMessage(id: string, turn: BuyerTurn) {
         role: "merchant",
         text: reply.text,
         decision: decision.type,
-        offer: offerFor(decision, next),
+        offer: dealOffer,
         at: new Date().toISOString(),
       },
     ],
@@ -182,6 +185,8 @@ export async function sendMessage(id: string, turn: BuyerTurn) {
     merchantReply: reply.text,
     replySource: reply.source,
     decision: decision.type,
+    // The deal this reply is about (null for small talk)
+    dealOffer: dealOffer ? { ...dealOffer, dealValue: dealValue(ctx, dealOffer) } : null,
     ...publicView(neg, ctx),
   };
 }
