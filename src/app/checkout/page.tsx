@@ -109,6 +109,10 @@ function CheckoutForm() {
   const perkSavings = perk?.price ?? 0;
   const discount = Math.max(0, listPrice - payPrice);
   const returnPolicy = returnPolicyForCity(shippingCity);
+  const finalSale = /final sale/i.test(concessions);
+  const returnsLine = finalSale
+    ? "Final sale: you traded returns for this price, so this pair can't be sent back."
+    : returnPolicy.detail;
   const confirmLabel = negotiated
     ? `Confirm deal · ${gbp(payPrice)}`
     : perk
@@ -272,7 +276,7 @@ function CheckoutForm() {
               <span className="tabular-nums">{gbp(payPrice)}</span>
             </div>
           </div>
-          <p className="mt-3 text-xs text-stone-500">{returnPolicy.detail}</p>
+          <p className="mt-3 text-xs text-stone-500">{returnsLine}</p>
 
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
