@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { gbp, productAlt } from "@/lib/format";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { gbp, productAlt } from "@/lib/format";
 
 export function ProductCard({ product }: { product: Product }) {
   return (

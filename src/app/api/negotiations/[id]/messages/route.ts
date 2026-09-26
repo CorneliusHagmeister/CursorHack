@@ -1,5 +1,5 @@
 import { NegotiationError } from "@/lib/negotiation/engine";
-import { handle, optionalPrice, optionalString, readJson } from "@/lib/negotiation/http";
+import { handle, optionalPrice, optionalString, optionalTerms, readJson } from "@/lib/negotiation/http";
 import { sendMessage } from "@/lib/negotiation/service";
 
 export async function POST(req: Request, ctx: RouteContext<"/api/negotiations/[id]/messages">) {
@@ -15,6 +15,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/negotiations/[i
       message: optionalString(body, "message") ?? "",
       counterOffer,
       acceptOfferId,
+      offerTerms: optionalTerms(body, "offerTerms"),
       includePerk: body.includePerk === true,
       perkId: optionalString(body, "perkId"),
     });

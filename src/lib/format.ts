@@ -1,4 +1,4 @@
-import type { Product } from "@/lib/types";
+import type { Product } from "./types";
 
 export function gbp(n: number): string {
   return new Intl.NumberFormat("en-GB", {
@@ -8,16 +8,17 @@ export function gbp(n: number): string {
   }).format(n);
 }
 
-export function productAlt(
-  product: Pick<Product, "brand" | "name" | "wash" | "cut">
-) {
-  return `${product.brand} ${product.name}, ${product.wash.toLowerCase()} ${product.cut.toLowerCase()}`;
-}
-
 export function formatWhen(iso: string): string {
   return new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "Europe/London",
   }).format(new Date(iso));
+}
+
+/** Image alt text for a product; shared by server and client components */
+export function productAlt(
+  product: Pick<Product, "brand" | "name" | "wash" | "cut">
+) {
+  return `${product.brand} ${product.name}, ${product.wash.toLowerCase()} ${product.cut.toLowerCase()}`;
 }

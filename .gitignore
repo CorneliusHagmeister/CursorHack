@@ -35,3 +35,6 @@ yarn-debug.log*
 yarn-error.log*
 /data/agent-tokens.json
 supabase/.temp/
+
+# merchant pricing policies saved locally (Supabase when configured)
+data/policies.json

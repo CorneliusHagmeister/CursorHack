@@ -69,7 +69,7 @@ curl -s -X POST http://localhost:3000/api/v1/negotiations/NEG_ID/messages \
 
 Full reference: [docs/negotiation-api.md](docs/negotiation-api.md).
 
-Agents haggle with the merchant on a shopper's behalf. **Prices are decided deterministically** in [`src/lib/negotiation/engine.ts`](src/lib/negotiation/engine.ts) (hidden floor per product, concession curve, best-and-final after 4 rounds, Pair & Perk bundle as a lever). **Claude only phrases the reply** ([`voice.ts`](src/lib/negotiation/voice.ts)) via Vercel AI Gateway (`AI_GATEWAY_API_KEY`) or the Claude API (`ANTHROPIC_API_KEY`); a reply that mentions any £ amount the engine didn't produce is replaced by a template.
+Agents haggle with the merchant on a shopper's behalf. **Prices are decided deterministically** in [`src/lib/negotiation/engine.ts`](src/lib/negotiation/engine.ts) (give-to-get: the price only drops in exchange for buyer terms like final sale or standard shipping, capped by a hidden floor; Pair & Perk adds a free pair instead). **An LLM only phrases the reply** ([`voice.ts`](src/lib/negotiation/voice.ts)) via Vercel AI Gateway (`AI_GATEWAY_API_KEY`) or the Claude API (`ANTHROPIC_API_KEY`); a reply that mentions any £ amount the engine didn't produce is replaced by a template.
 
 | Method | Path | operationId |
 |---|---|---|

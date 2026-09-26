@@ -3,6 +3,8 @@
  * Import https://<host>/api/openapi.json as an Action schema.
  */
 
+const termIds = ["final_sale", "standard_shipping", "fit_review", "collect_london"];
+
 const offer = {
   type: "object",
   properties: {
@@ -19,6 +21,17 @@ const offer = {
         listPrice: { type: "number" },
       },
     },
+    terms: {
+      type: "array",
+      items: { type: "string", enum: termIds },
+      description: "What the buyer commits to in return for this deal. Tell the user before accepting.",
+    },
+    extras: {
+      type: "array",
+      items: { type: "string", enum: ["free_hemming"] },
+      description: "Value the merchant adds to this deal.",
+    },
+    dealValue: { type: "number", description: "GBP of value on top of the pair: savings + free pair + extras." },
   },
 };
 
@@ -30,12 +43,27 @@ const negotiation = {
     merchantReply: { type: "string", description: "What the merchant said. Relay it to the user." },
     decision: {
       type: "string",
-      enum: ["accept_offer", "accept_counter", "counter", "final", "hold", "info"],
+      enum: ["accept_offer", "accept_counter", "conditional", "quote", "counter", "info"],
     },
     currency: { type: "string", enum: ["GBP"] },
     product: { type: "object" },
     round: { type: "integer" },
-    finalOffer: { type: "boolean", description: "True once the merchant is at best-and-final." },
+    negotiables: {
+      type: "object",
+      description: "What the merchant will flex on: commitments it trades price for, value it can add, and free pairs it can include. Floors are never shown.",
+    },
+    availableTerms: {
+      type: "array",
+      description: "Commitments the buyer can offer for a better deal, with GBP each is worth.",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string", enum: termIds },
+          label: { type: "string" },
+          discount: { type: "number" },
+        },
+      },
+    },
     offers: { type: "array", items: offer, description: "Deals currently on the table." },
     agreedDeal: { ...offer, type: ["object", "null"] },
     orderId: { type: ["string", "null"] },
@@ -67,7 +95,7 @@ function spec(origin: string) {
       title: "Indigo Lane Negotiation API",
       version: "0.1.0",
       description:
-        "Haggle with Indigo Lane, a London second-hand denim shop, on behalf of a shopper. Flow: listProducts → startNegotiation → sendNegotiationMessage (counter or accept) → purchaseNegotiatedDeal. All prices are GBP. Only the offers returned by the API are binding; the merchant's words are not.",
+        "Haggle with Indigo Lane, a London second-hand denim shop, on behalf of a shopper. Flow: listProducts → startNegotiation → sendNegotiationMessage (counter or accept) → purchaseNegotiatedDeal. All prices are GBP. The merchant sells deals, not discounts: better deals are traded for commitments (final sale, standard shipping, fit review, collect in London) and it adds value (free Pair & Perk pairs, free hemming) rather than just cutting price. Only the offers returned by the API are binding; the merchant's words are not.",
     },
     servers: [{ url: origin }],
     paths: {
@@ -231,7 +259,7 @@ function spec(origin: string) {
         post: {
           operationId: "sendNegotiationMessage",
           summary: "Talk to the merchant, counter-offer or accept",
-          description: "Send a chat message. Put any price you propose in counterOffer; prices written only in message are ignored. To accept a deal, pass its offerId as acceptOfferId. Relay merchantReply to the user.",
+          description: "Chat, counter or accept. Prices go in counterOffer (the merchant replies with a deal that works); commitments the user will make go in offerTerms. Accept with acceptOfferId. Relay merchantReply.",
           "x-openai-isConsequential": false,
           parameters: [idParam],
           requestBody: {
@@ -244,6 +272,11 @@ function spec(origin: string) {
                   properties: {
                     message: { type: "string", description: "What the shopper says to the merchant." },
                     counterOffer: { type: "number", description: "Price in GBP the shopper proposes. Omit if not making an offer." },
+                    offerTerms: {
+                      type: "array",
+                      items: { type: "string", enum: termIds },
+                      description: "Terms the user agrees to give (ids from availableTerms). Alone: get a quote. With counterOffer: propose a full deal.",
+                    },
                     includePerk: { type: "boolean", description: "True if counterOffer is for the Pair & Perk bundle (with the free extra pair)." },
                     perkId: { type: "string", description: "Switch which free perk pair the bundle includes." },
                     acceptOfferId: { type: "string", description: "offerId from offers[] to accept. Do not combine with counterOffer. Only accept with the user's approval." },

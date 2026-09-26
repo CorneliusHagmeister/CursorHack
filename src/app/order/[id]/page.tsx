@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { gbp, formatWhen, productAlt } from "@/lib/format";
 import { getProduct } from "@/lib/products";
 import { getOrder } from "@/lib/store";
-import { gbp, formatWhen, productAlt } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 

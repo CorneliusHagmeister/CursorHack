@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { gbp, formatWhen, productAlt } from "@/lib/format";
 import { listOrders } from "@/lib/store";
 import { listProducts } from "@/lib/products";
-import { gbp, formatWhen, productAlt } from "@/lib/format";
 import { MerchantActions } from "@/components/MerchantActions";
 
 export const dynamic = "force-dynamic";
@@ -133,9 +133,9 @@ export default async function MerchantPage() {
               <tr>
                 <th className="px-4 py-3">Item</th>
                 <th className="px-4 py-3">Size</th>
-                <th className="px-4 py-3">Condition</th>
+                <th className="hidden px-4 py-3 sm:table-cell">Condition</th>
                 <th className="px-4 py-3">Price</th>
-                <th className="px-4 py-3">Role</th>
+                <th className="hidden px-4 py-3 sm:table-cell">Role</th>
               </tr>
             </thead>
             <tbody>
@@ -164,9 +164,9 @@ export default async function MerchantPage() {
                   <td className="px-4 py-3 tabular-nums">
                     W{p.waist} L{p.length}
                   </td>
-                  <td className="px-4 py-3">{p.condition}</td>
+                  <td className="hidden px-4 py-3 sm:table-cell">{p.condition}</td>
                   <td className="px-4 py-3 tabular-nums">{gbp(p.price)}</td>
-                  <td className="px-4 py-3">
+                  <td className="hidden px-4 py-3 sm:table-cell">
                     {p.perkEligible ? (
                       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
                         perk
