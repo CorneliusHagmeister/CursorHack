@@ -1,4 +1,4 @@
-# Indigo Lane hackathon context
+# Haggleberry hackathon context
 
 Event: Grok Bot Commerce x Fleek London.
 Product: two-sided second-hand jeans marketplace.
@@ -25,4 +25,4 @@ pnpm run build
 
 ## Stage click path
 
-`/` → Sign in (Continue as demo shopper) → `/product/apc-petit-new#negotiate` → Start offer → Knock £10 off → Apply → Confirm → `/merchant`.
+`/` → Sign in (Continue as demo shopper) → `/product/apc-petit-new#negotiate` → Start offer → Knock £10 off (Finn answers with a deal, not a discount) → We'll take the deal → Apply → Confirm → `/merchant` (and `/merchant/live` shows the chat).

@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { resolveShopperContext } from "@/lib/context";
-import { serviceNegotiate } from "@/lib/services";
+import { compatStateless } from "@/lib/negotiation/compat";
+import { NegotiationError } from "@/lib/negotiation/engine";
 import type { NegotiatedDeal, NegotiateMessage } from "@/lib/types";
 
+/** On-site deal desk. Runs on the deal engine; the deal carries its negotiationId between turns. */
 export async function POST(req: Request) {
   const body = (await req.json()) as {
     productId?: string;
     message?: string;
     history?: NegotiateMessage[];
-    deal?: NegotiatedDeal | null;
+    deal?: (NegotiatedDeal & { negotiationId?: string }) | null;
   };
   if (!body.productId) {
     return NextResponse.json(
@@ -23,13 +25,18 @@ export async function POST(req: Request) {
     authorization: req.headers.get("authorization"),
   });
 
-  const result = serviceNegotiate({
-    productId: body.productId,
-    message: body.message ?? "",
-    history: body.history ?? [],
-    deal: body.deal ?? null,
-    shopper: ctx.shopper ?? null,
-    campaign: ctx.campaign ?? null,
-  });
-  return NextResponse.json(result);
+  try {
+    const result = await compatStateless({
+      productId: body.productId,
+      message: body.message ?? "",
+      negotiationId: body.deal?.negotiationId ?? null,
+      shopper: ctx.shopper ?? null,
+    });
+    return NextResponse.json(result);
+  } catch (err) {
+    if (err instanceof NegotiationError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    throw err;
+  }
 }

@@ -117,7 +117,7 @@ export function runAssist(req: AssistRequest): {
         ]
           .filter(Boolean)
           .join(", ")}:`
-      : `Strong picks from today's Indigo Lane catalogue:`;
+      : `Strong picks from today's Haggleberry catalogue:`;
 
   const reply = [
     intro,

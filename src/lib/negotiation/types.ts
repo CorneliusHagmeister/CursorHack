@@ -1,7 +1,7 @@
 export type NegotiationStatus = "open" | "agreed" | "purchased";
 
 /** Commitments a buyer can give in exchange for a lower price */
-export type TermId = "final_sale" | "standard_shipping" | "fit_review" | "collect_london";
+export type TermId = "final_sale" | "store_credit" | "standard_shipping" | "fit_review" | "collect_london";
 
 /** Value the merchant can add instead of cutting price */
 export type ExtraId = "free_hemming";
@@ -45,6 +45,8 @@ export type Negotiation = {
   productId: string;
   listPrice: number;
   buyerName?: string;
+  /** Known shopper (signed in or agent token): lets the merchant talk fit and budget */
+  buyerProfile?: { waist: number; length: number; budgetMax: number; preferredBrands: string[] } | null;
   status: NegotiationStatus;
   round: number; // number of buyer price moves (counters or proposed terms)
   pressure?: number; // times the buyer pushed below what we'd do; unlocks smaller and smaller concessions
@@ -73,7 +75,7 @@ export type Decision =
   | { type: "accept_counter"; offer: Offer } // buyer's price + terms work, deal done
   | { type: "conditional"; offer: Offer } // "that price works if you give us X"
   | { type: "quote"; offer: Offer } // price for the terms the buyer proposed
-  | { type: "counter"; offer: Offer; final: boolean } // too low: our counter (with terms + extras); final = at walk-away
+  | { type: "counter"; offer: Offer; final: boolean; held: boolean } // too low: our counter; final = at walk-away, held = buyer didn't move so neither did we
   | { type: "info" }; // no price action, just conversation
 
 export type Priority = "hold" | "normal" | "clear";

@@ -21,7 +21,7 @@ export function MerchantNav() {
   }
 
   return (
-    <nav aria-label="Merchant" className="mx-auto flex max-w-6xl items-center gap-1 px-4 pt-6 text-sm sm:px-6">
+    <nav aria-label="Merchant" className="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto whitespace-nowrap px-4 pt-6 text-sm sm:px-6">
       {LINKS.map((l) => {
         const active = pathname === l.href;
         return (
@@ -30,7 +30,7 @@ export function MerchantNav() {
             href={l.href}
             aria-current={active ? "page" : undefined}
             className={`rounded-full px-3 py-1.5 ${
-              active ? "bg-indigo-950 text-amber-50" : "text-stone-600 hover:bg-stone-100"
+              active ? "bg-rinse text-white" : "text-stone-600 hover:bg-stone-100"
             }`}
           >
             {l.label}

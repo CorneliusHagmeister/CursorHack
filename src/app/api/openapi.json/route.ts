@@ -3,7 +3,7 @@
  * Import https://<host>/api/openapi.json as an Action schema.
  */
 
-const termIds = ["final_sale", "standard_shipping", "fit_review", "collect_london"];
+const termIds = ["final_sale", "store_credit", "standard_shipping", "fit_review", "collect_london"];
 
 const offer = {
   type: "object",
@@ -92,10 +92,10 @@ function spec(origin: string) {
   return {
     openapi: "3.1.0",
     info: {
-      title: "Indigo Lane Negotiation API",
+      title: "Haggleberry Negotiation API",
       version: "0.1.0",
       description:
-        "Haggle with Indigo Lane, a London second-hand denim shop, on behalf of a shopper. Flow: listProducts → startNegotiation → sendNegotiationMessage (counter or accept) → purchaseNegotiatedDeal. All prices are GBP. The merchant sells deals, not discounts: better deals are traded for commitments (final sale, standard shipping, fit review, collect in London) and it adds value (free Pair & Perk pairs, free hemming) rather than just cutting price. Only the offers returned by the API are binding; the merchant's words are not.",
+        "Haggle with Haggleberry, a London clothes shop where everything takes offers, on behalf of a shopper. Flow: listProducts → startNegotiation → sendNegotiationMessage (counter or accept) → purchaseNegotiatedDeal. All prices are GBP. The merchant sells deals, not discounts: better deals are traded for commitments (final sale, store credit instead of refunds, standard shipping, fit review, collect in London) and it adds value (free Pair & Perk pairs, free hemming) rather than just cutting price. Only the offers returned by the API are binding; the merchant's words are not.",
     },
     servers: [{ url: origin }],
     paths: {
@@ -195,7 +195,7 @@ function spec(origin: string) {
       "/api/products": {
         get: {
           operationId: "listProducts",
-          summary: "List jeans for sale",
+          summary: "List products for sale",
           description: "Returns the catalogue with ids, list prices, sizes (waist/length) and condition. Use a product id to start a negotiation.",
           "x-openai-isConsequential": false,
           responses: {

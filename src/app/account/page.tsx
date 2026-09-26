@@ -4,14 +4,15 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { StatementCard } from "@/components/StatementCard";
 
+const signInLink = (code: string, origin: string) => `${origin}/login?code=${encodeURIComponent(code)}`;
+
 const agentNote = (code: string, origin: string) =>
   [
-    "Shop on Indigo Lane for me.",
+    "Shop on Haggleberry for me.",
     "",
-    `Open ${origin}/login`,
-    `Sign in with this one-time code: ${code}`,
+    `Open this link to sign in as me: ${signInLink(code, origin)}`,
     "",
-    "You then have my size, budget, and past buys. Do not ask for my password. The code works once.",
+    "You then have my size, budget, and past buys. Do not ask for my password. The link works once.",
   ].join("\n");
 
 type Me = {
@@ -27,11 +28,12 @@ export default function AccountPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [link, setLink] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const promptRef = useRef<HTMLTextAreaElement>(null);
+  const promptRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -47,19 +49,15 @@ export default function AccountPage() {
     setError(null);
     setCopied(false);
     setNote(null);
+    setLink(null);
     try {
       const res = await fetch("/api/auth/session-code", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not prepare a note");
-      const nextNote = agentNote(data.code as string, window.location.origin);
-      setNote(nextNote);
+      const origin = window.location.origin;
+      setNote(agentNote(data.code as string, origin));
+      setLink(signInLink(data.code as string, origin));
       setExpiresAt(data.expiresAt as string);
-      try {
-        await navigator.clipboard.writeText(nextNote);
-        setCopied(true);
-      } catch {
-        setCopied(false);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");
     } finally {
@@ -67,20 +65,21 @@ export default function AccountPage() {
     }
   };
 
-  const handleCopyNote = () => {
-    if (!note) return;
-    const field = promptRef.current;
-    if (field) {
-      field.focus();
-      field.select();
-    }
+  const handleCopyLink = () => {
+    if (!link) return;
     const markCopied = () => setCopied(true);
     if (navigator.clipboard?.writeText) {
-      void navigator.clipboard.writeText(note).then(markCopied).catch(() => {
+      void navigator.clipboard.writeText(link).then(markCopied).catch(() => {
+        const field = promptRef.current;
+        field?.focus();
+        field?.select();
         if (document.execCommand("copy")) markCopied();
       });
       return;
     }
+    const field = promptRef.current;
+    field?.focus();
+    field?.select();
     if (document.execCommand("copy")) markCopied();
   };
 
@@ -119,7 +118,7 @@ export default function AccountPage() {
       <h1 className="text-2xl font-semibold text-stone-900">{me.name ?? "Account"}</h1>
 
       <p className="mt-3 max-w-md text-sm leading-relaxed text-stone-600">
-        Your agent is about to shop blind. A note gives it your size and budget,
+        Your agent is about to shop blind. A link gives it your size and budget,
         so it can haggle the way you would. Your password stays on this page.
       </p>
 
@@ -130,34 +129,40 @@ export default function AccountPage() {
           disabled={busy}
           className="rounded-full bg-stone-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
         >
-          Copy a note for your agent
+          Give your agent a sign-in link
         </button>
         <div aria-live="polite">
-          {note && (
+          {link && note && (
             <>
               <p className="mt-4 text-sm text-stone-600">
-                {copied
-                  ? "On your clipboard. Paste it into the chat."
-                  : "Select the note and paste it into the chat."}{" "}
+                Give this to your agent. It signs in as you, already filled in.{" "}
                 {expiresAt
-                  ? `It works once, until ${new Date(expiresAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}.`
-                  : "It works once."}
+                  ? `Works once, until ${new Date(expiresAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}.`
+                  : "Works once."}
               </p>
-              <textarea
-                ref={promptRef}
-                readOnly
-                value={note}
-                rows={8}
-                aria-label="Note for your agent"
-                className="mt-4 w-full resize-none bg-transparent text-sm leading-relaxed text-stone-800 outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleCopyNote}
-                className="mt-2 text-sm text-stone-600 underline"
-              >
-                {copied ? "Copied" : "Copy the note"}
-              </button>
+              <div className="mt-3 flex items-stretch gap-2">
+                <input
+                  ref={promptRef}
+                  readOnly
+                  value={link}
+                  aria-label="Sign-in link for your agent"
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="min-w-0 flex-1 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="shrink-0 rounded-xl border border-stone-300 px-3 py-2 text-sm font-medium text-stone-800 hover:bg-stone-50"
+                >
+                  {copied ? "Copied" : "Copy"}
+                </button>
+              </div>
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm text-stone-500 underline">
+                  Or read it a note instead
+                </summary>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-stone-600">{note}</p>
+              </details>
             </>
           )}
         </div>

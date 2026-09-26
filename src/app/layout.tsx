@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Archivo, Geist_Mono } from "next/font/google";
+import { Archivo, Geist_Mono, Zilla_Slab } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { Header } from "@/components/Header";
@@ -11,15 +11,21 @@ const archivo = Archivo({
   axes: ["wdth"],
 });
 
+const zillaSlab = Zilla_Slab({
+  variable: "--font-zilla",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Indigo Lane · second-hand denim",
+  title: "Haggleberry · clothes, open to offers",
   description:
-    "Buy second-hand jeans from UK sellers. Make an offer, unlock a free bundle pair, or shop through your own agent.",
+    "A clothes shop where everything takes offers. Haggle yourself or send your AI assistant, and get a deal back instead of a flat no.",
 };
 
 const FOOTER_LINKS = [
@@ -37,7 +43,7 @@ export default function RootLayout({
   return (
     <html
       lang="en-GB"
-      className={`${archivo.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${archivo.variable} ${geistMono.variable} ${zillaSlab.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-floor text-ink">
         <Suspense fallback={<div className="mx-3 mt-3 h-14 rounded-tile bg-white" />}>
@@ -45,7 +51,7 @@ export default function RootLayout({
         </Suspense>
         <main className="flex-1">{children}</main>
         <footer className="m-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-tile bg-white px-4 py-3">
-          <span className="text-caps">Indigo Lane · second-hand denim</span>
+          <span className="text-caps">Haggleberry · clothes, open to offers</span>
           <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-1">
             {FOOTER_LINKS.map((link) => (
               <Link key={link.href} href={link.href} className="text-caps text-muted hover:text-ink">

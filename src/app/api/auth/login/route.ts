@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: "That code has expired or was already used.",
-          hint: "Ask the shopper to copy a new note from Account. Do not ask for their password.",
+          hint: "Ask the shopper for a new sign-in link from Account. Do not ask for their password.",
         },
         { status: 401 }
       );

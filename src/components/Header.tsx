@@ -10,8 +10,16 @@ export function Header() {
   return (
     <header className="sticky top-3 z-40 mx-3 mt-3 rounded-tile bg-white">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
-        <Link href="/" className="font-display text-lg italic tracking-tight text-ink">
-          Indigo Lane
+        <Link href="/" className="flex items-center gap-2 font-display text-lg italic tracking-tight text-ink">
+          <img
+            src="/haggleberry-mark.svg"
+            alt=""
+            width={39}
+            height={32}
+            className="h-7 w-auto shrink-0"
+            aria-hidden
+          />
+          Haggleberry
         </Link>
 
         <SearchBox />

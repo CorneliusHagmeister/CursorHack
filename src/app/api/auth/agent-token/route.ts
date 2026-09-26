@@ -18,7 +18,7 @@ export async function POST() {
 
   const { token, record } = await createAgentToken({
     shopperId: shopper.id,
-    label: "Indigo Lane agent",
+    label: "Haggleberry agent",
   });
 
   return NextResponse.json({

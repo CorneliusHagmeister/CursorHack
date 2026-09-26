@@ -1,4 +1,4 @@
-# IDE handoff, Indigo Lane
+# IDE handoff, Haggleberry
 
 Continue on branch `feature/generic-shop-agents-il1` (or merge into `dev`).
 

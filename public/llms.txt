@@ -1,6 +1,6 @@
-# Indigo Lane
+# Haggleberry
 
-Second-hand denim marketplace for humans and agents.
+Clothes shop for humans and agents. Everything takes offers.
 
 ## Shop
 

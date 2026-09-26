@@ -1,0 +1,14 @@
+---
+description: When the user says "final checklist", perform docs/hackathon/final-checklist.md. Do not only repeat the list.
+alwaysApply: false
+---
+
+# Final checklist
+
+When the user says "final checklist", open `docs/hackathon/final-checklist.md` and do the sections in order.
+
+- Tick a box only after its done-when line is true.
+- Write a blocker under a box you cannot finish, then continue.
+- Use only profile and live URLs the checklist, the repo, Vercel, or the user already gave you.
+- The last demo frame is `/pitch`: live URL, repo, and one QR each for Mangle Kuo and Cornelius Hagmeister.
+- Do not commit unless the user asked in that turn.
