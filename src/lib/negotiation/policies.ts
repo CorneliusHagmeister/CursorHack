@@ -15,6 +15,7 @@ import type {
 /** Buyer commitments the merchant can trade price for */
 export const TERM_CATALOG: { id: TermId; label: string }[] = [
   { id: "final_sale", label: "Final sale — no returns" },
+  { id: "store_credit", label: "Store credit instead of a refund if you return it" },
   { id: "standard_shipping", label: "Standard 5-day shipping instead of next-day" },
   { id: "fit_review", label: "Post a fit review with photos within 14 days" },
   { id: "collect_london", label: "Collect in person from our London studio" },
@@ -67,6 +68,8 @@ export function defaultPolicy(product: Product): ProductPolicy {
     highValue: false,
     terms: {
       final_sale: { enabled: true, discount: finalSaleWorth(product, returnRisk) },
+      // Credit keeps the money in the shop, so worth about half of no returns at all
+      store_credit: { enabled: true, discount: Math.max(1, Math.round(finalSaleWorth(product, returnRisk) / 2)) },
       standard_shipping: { enabled: true, discount: 4 },
       fit_review: { enabled: true, discount: Math.max(1, Math.round(product.price * 0.05)) },
       collect_london: { enabled: product.city === "London", discount: 3 },

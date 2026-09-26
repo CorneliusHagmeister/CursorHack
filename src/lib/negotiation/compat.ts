@@ -119,6 +119,7 @@ function respond(view: View, reply: string): CompatResponse {
 
 const TERM_PATTERNS: [TermId, RegExp][] = [
   ["final_sale", /final sale|no returns?/i],
+  ["store_credit", /store credit|shop credit|credit instead/i],
   ["standard_shipping", /standard (5-day )?shipping|slow(er)? shipping|no rush|5-day/i],
   ["fit_review", /review/i],
   ["collect_london", /collect|pick(ing)? (it |them )?up/i],

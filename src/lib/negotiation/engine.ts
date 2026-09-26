@@ -139,14 +139,16 @@ function priceFor(
   pressure: number
 ): number {
   const all = availableTerms(ctx);
-  const off = terms.reduce((s, id) => s + (all.find((t) => t.id === id)?.discount ?? 0), 0);
+  const off = sortTerms(terms).reduce((s, id) => s + (all.find((t) => t.id === id)?.discount ?? 0), 0);
   const min = positionAt(ctx, pressure) + (perk ? perkCost(perk) : 0) + extrasCost(ctx, extras);
   return Math.min(ctx.product.price, Math.max(min, ctx.product.price - off));
 }
 
 function sortTerms(terms: TermId[]): TermId[] {
   const order = TERM_CATALOG.map((t) => t.id);
-  return [...new Set(terms)].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  // Store credit only applies to returns, so final sale (no returns) supersedes it
+  const coherent = terms.includes("final_sale") ? terms.filter((t) => t !== "store_credit") : terms;
+  return [...new Set(coherent)].sort((a, b) => order.indexOf(a) - order.indexOf(b));
 }
 
 function makeOffer(

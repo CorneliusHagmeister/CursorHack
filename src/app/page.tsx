@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { CatalogueFilters } from "@/components/CatalogueFilters";
+import { HomeHero } from "@/components/HomeHero";
 import { searchProducts } from "@/lib/products";
 import type { Condition, ProductFilters } from "@/lib/types";
 
@@ -25,15 +26,21 @@ export default async function HomePage({
   };
 
   const products = searchProducts(filters);
+  // The pitch only greets a fresh visit; searches and filters go straight to results
+  const browsing = Object.values(filters).some((v) => v !== undefined);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">
-          Second-hand denim
-        </h1>
+      {!browsing && <HomeHero />}
+
+      <div id="shop" className={`mb-6 scroll-mt-24 ${browsing ? "" : "pt-12"}`}>
+        {browsing ? (
+          <h1 className="font-slab text-3xl font-bold text-rinse">In the shop</h1>
+        ) : (
+          <h2 className="font-slab text-3xl font-bold text-rinse">In the shop</h2>
+        )}
         <p className="mt-1 text-sm text-stone-500">
-          {products.length} pairs · UK sellers
+          {products.length} {products.length === 1 ? "item" : "items"}, all open to offers
         </p>
       </div>
 
@@ -49,7 +56,7 @@ export default async function HomePage({
 
       {products.length === 0 && (
         <p className="mt-12 text-center text-sm text-stone-500">
-          No pairs match those filters.
+          Nothing matches those filters. Clear one to see more.
         </p>
       )}
     </div>

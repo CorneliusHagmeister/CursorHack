@@ -26,9 +26,9 @@ export function Header() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
         <Link
           href="/"
-          className="text-lg font-semibold tracking-tight text-stone-900"
+          className="font-slab text-xl font-bold text-rinse"
         >
-          Indigo Lane
+          Haggleberry
         </Link>
 
         <form

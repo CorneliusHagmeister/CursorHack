@@ -1,7 +1,7 @@
 export type NegotiationStatus = "open" | "agreed" | "purchased";
 
 /** Commitments a buyer can give in exchange for a lower price */
-export type TermId = "final_sale" | "standard_shipping" | "fit_review" | "collect_london";
+export type TermId = "final_sale" | "store_credit" | "standard_shipping" | "fit_review" | "collect_london";
 
 /** Value the merchant can add instead of cutting price */
 export type ExtraId = "free_hemming";

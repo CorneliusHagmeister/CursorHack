@@ -4,7 +4,7 @@ export async function GET() {
   const spec = {
     openapi: "3.1.0",
     info: {
-      title: "Indigo Lane Agent API",
+      title: "Haggleberry Agent API",
       version: "1.0.0",
       description:
         "Catalogue, live offers, and orders for shopper agents. Mirrors the website.",
@@ -74,7 +74,7 @@ export async function GET() {
                     counterOffer: { type: "number", description: "Optional structured price in GBP" },
                     offerTerms: {
                       type: "array",
-                      items: { type: "string", enum: ["final_sale", "standard_shipping", "fit_review", "collect_london"] },
+                      items: { type: "string", enum: ["final_sale", "store_credit", "standard_shipping", "fit_review", "collect_london"] },
                       description: "Optional commitments the shopper makes",
                     },
                     includePerk: { type: "boolean", description: "Optional: negotiate the Pair & Perk bundle" },

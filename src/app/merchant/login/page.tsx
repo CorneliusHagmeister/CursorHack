@@ -1,7 +1,7 @@
 import { MerchantLoginForm } from "@/components/MerchantLoginForm";
 import { safeMerchantNext, usingDemoMerchantPassword } from "@/lib/merchant-auth";
 
-export const metadata = { title: "Merchant sign in · Indigo Lane" };
+export const metadata = { title: "Merchant sign in · Haggleberry" };
 
 export default async function MerchantLoginPage({
   searchParams,

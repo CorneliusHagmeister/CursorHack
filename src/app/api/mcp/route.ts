@@ -16,7 +16,7 @@ const handler = createMcpHandler((server) => {
     "search_products",
     {
       title: "Search products",
-      description: "Search the Indigo Lane second-hand denim catalogue.",
+      description: "Search the Haggleberry catalogue. Everything takes offers.",
       inputSchema: z.object({
         q: z.string().optional(),
         waist: z.number().int().optional(),
@@ -70,7 +70,7 @@ const handler = createMcpHandler((server) => {
     {
       title: "Negotiate",
       description:
-        "Start or continue a deal on a product. Pass an empty message to open. The merchant sells deals, not discounts: it trades price for commitments (final sale, standard shipping, fit review, collect in London) and adds value (free Pair & Perk pair, free hemming). Pass back deal.negotiationId to continue the same negotiation.",
+        "Start or continue a deal on a product. Pass an empty message to open. The merchant sells deals, not discounts: it trades price for commitments (final sale, store credit instead of refunds, standard shipping, fit review, collect in London) and adds value (free Pair & Perk pair, free hemming). Pass back deal.negotiationId to continue the same negotiation.",
       inputSchema: z.object({
         productId: z.string(),
         message: z.string().default(""),
@@ -84,7 +84,7 @@ const handler = createMcpHandler((server) => {
           .describe("Continue this negotiation (from deal.negotiationId)"),
         counterOffer: z.number().optional().describe("Price in GBP the shopper proposes"),
         offerTerms: z
-          .array(z.enum(["final_sale", "standard_shipping", "fit_review", "collect_london"]))
+          .array(z.enum(["final_sale", "store_credit", "standard_shipping", "fit_review", "collect_london"]))
           .optional()
           .describe("Commitments the shopper will make"),
         includePerk: z.boolean().optional().describe("Negotiate the Pair & Perk bundle"),

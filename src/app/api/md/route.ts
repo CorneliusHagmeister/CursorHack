@@ -5,9 +5,9 @@ import { gbp } from "@/lib/format";
 export async function GET() {
   const products = listProducts();
   const lines = [
-    "# Indigo Lane",
+    "# Haggleberry",
     "",
-    "Second-hand denim shop. Browse anonymously. Sign in or send an agent bearer token to unlock fit and budget context on the product page.",
+    "Clothes shop where everything takes offers. Browse anonymously. Sign in or send an agent bearer token to unlock fit and budget context on the product page.",
     "",
     "## Catalogue",
     "",

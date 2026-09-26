@@ -1,4 +1,4 @@
-# Indigo Lane
+# Haggleberry
 
 Second-hand denim shop. The landing page is anonymous, like a logged-out Vinted visit. Fit, budget, and past buys appear only after an ad link, a sign-in, or a shopper's own agent.
 
@@ -28,8 +28,8 @@ pnpm run build
 
 1. Open `/` as a generic shop (no Sam strip).
 2. Sign in as demo shopper, or open `/product/apc-petit-new?utm_campaign=raw-denim` after login.
-3. Make an offer. Mo opens on W31 vs W30 and £5 over the £90 budget, then leads with the Pair & Perk deal.
-4. Knock £10 off → Mo answers with a deal, not a discount (e.g. £88 for final sale, or the full bundle at list). "We'll take the deal" → Apply → Confirm → Merchant. Watch it live on `/merchant/live`.
+3. Make an offer. Finn opens on W31 vs W30 and £5 over the £90 budget, then leads with the Pair & Perk deal.
+4. Knock £10 off → Finn answers with a deal, not a discount (e.g. £88 for final sale, or the full bundle at list). "We'll take the deal" → Apply → Confirm → Merchant. Watch it live on `/merchant/live`.
 
 ## Agent path (v1 + MCP)
 

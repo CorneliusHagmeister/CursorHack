@@ -3,7 +3,7 @@ import { perkOptionsFor } from "@/lib/negotiation/merchant";
 import { EXTRA_CATALOG, TERM_CATALOG, defaultPolicy, listPolicies } from "@/lib/negotiation/policies";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Deal settings · Indigo Lane" };
+export const metadata = { title: "Deal settings · Haggleberry" };
 
 export default async function DealSettingsPage() {
   const items = (await listPolicies()).map(({ product, policy }) => ({

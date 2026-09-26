@@ -1,6 +1,6 @@
 # Negotiation API
 
-An HTTP API that lets an AI assistant (ChatGPT, Claude, …) haggle with Indigo Lane on a shopper's behalf, then buy at the agreed price.
+An HTTP API that lets an AI assistant (ChatGPT, Claude, …) haggle with Haggleberry on a shopper's behalf, then buy at the agreed price.
 
 This is separate from the on-site deal desk (`/api/negotiate` + `NegotiatePanel`). Neither touches the other.
 
@@ -8,7 +8,7 @@ This is separate from the on-site deal desk (`/api/negotiate` + `NegotiatePanel`
 
 - **Deals, not discounts (enterprise buying).** [`src/lib/negotiation/engine.ts`](../src/lib/negotiation/engine.ts) decides every number. Every offer is a package: what the buyer **gets** (the pair, a free Pair & Perk pair, free hemming) and what they **commit to** (final sale, standard shipping, a fit review, collecting in London). Price only moves in exchange for commitments. It starts at the merchant's **target** and approaches the hidden **walk-away** price in shrinking steps (e.g. £48 → £46 → £45 → £44) only under sustained pressure, so a lowball never reveals it. When a buyer's number doesn't work, the merchant proposes a richer deal (bundle + extras, with its `dealValue`) rather than just a lower price.
 - **Per-item settings** (`/merchant/deals`, merchant login): target and walk-away (masked), selling priority (hold / normal / clear, clear-by date), return risk and high-value flag, what we're willing to compromise on (commitments and what each is worth, value-adds with cost vs buyer value, which free pairs to bundle and which to push first), and voice notes (selling points, never-say). A simulator runs the real engine against unsaved settings.
-- **Claude only writes the words.** [`voice.ts`](../src/lib/negotiation/voice.ts) turns the engine's decision into a short reply from "Mo". Claude never sees the floor. If a reply mentions any £ amount or percentage the engine didn't produce, it is replaced by a template. Templates are also used when no key is set or the call fails.
+- **Claude only writes the words.** [`voice.ts`](../src/lib/negotiation/voice.ts) turns the engine's decision into a short reply from "Finn". Claude never sees the floor. If a reply mentions any £ amount or percentage the engine didn't produce, it is replaced by a template. Templates are also used when no key is set or the call fails.
 - **Only structured fields are binding.** Prices go in `counterOffer` / `acceptOfferId`, never parsed from chat text. Purchase checks `price` against the server's agreed deal.
 
 ## Flow
@@ -97,7 +97,7 @@ This creates a normal order (`negotiated-pair-and-perk`, with list price, discou
 
 ## Connecting an assistant
 
-**ChatGPT:** create a GPT → Configure → Actions → Import from URL → `https://<host>/api/openapi.json`. Auth: none. `purchaseNegotiatedDeal` is marked `x-openai-isConsequential`, so ChatGPT asks the user before buying. Suggested GPT instruction: *"Negotiate for the user with the Indigo Lane actions. Relay merchantReply. Put prices only in counterOffer and terms the user agrees to in offerTerms. Explain what an offer's terms commit the user to, and get their OK before accepting or purchasing."*
+**ChatGPT:** create a GPT → Configure → Actions → Import from URL → `https://<host>/api/openapi.json`. Auth: none. `purchaseNegotiatedDeal` is marked `x-openai-isConsequential`, so ChatGPT asks the user before buying. Suggested GPT instruction: *"Negotiate for the user with the Haggleberry actions. Relay merchantReply. Put prices only in counterOffer and terms the user agrees to in offerTerms. Explain what an offer's terms commit the user to, and get their OK before accepting or purchasing."*
 
 **Claude:** use the same OpenAPI operations as tool definitions. An MCP wrapper around `src/lib/negotiation/service.ts` is the natural next step.
 
