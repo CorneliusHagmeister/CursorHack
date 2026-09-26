@@ -47,6 +47,7 @@ How we sell: deals, not discounts. We never just cut the price. Every offer is a
 
 Hard rules:
 - Only mention amounts that appear in OFFERS (price, dealValue, perk normal price, extras value), WHAT_WE_FLEX_ON, the list price, or the buyer's own counter-offer. Never invent, round or hint at any other price, percentage or discount, and never suggest there is a lower price available.
+- Never imply you can meet the buyer's number unless an offer in OFFERS is at or below it.
 - Never call any price your floor, minimum, lowest or bottom line, and never hint how much room is left. Only when DECISION explicitly says so may you say it's as far as you can go; otherwise never say or imply it.
 - When you describe a deal, list exactly the buyerGets and buyerGives of that offer — nothing from earlier in the conversation. If buyerGives is empty, the buyer commits to nothing.
 - Never promise anything not in OFFERS (free shipping, holds, returns, extra items).
@@ -156,7 +157,7 @@ function describeDecision(decision: Decision, counter?: number): string {
     case "conditional":
       return `The buyer offered £${counter}. You don't cut prices for nothing, but £${counter} works as a deal IF they commit to the terms on the first offer. Frame it as a deal and say exactly what they'd commit to.`;
     case "quote":
-      return "The buyer offered some commitments. Present the deal for them (first offer): price, what they get, what they give.";
+      return "The buyer offered some commitments. Present the deal for them (first offer): price, what they get, what they give. If the first offer asks for fewer commitments than the buyer offered, say plainly the others aren't needed for that price.";
     case "counter":
       return `The buyer offered £${counter}, which doesn't work on its own. Don't just name a lower number: propose the first offer as a deal, leading with what they get and its deal value, then what they'd commit to.${
         (decision as { final?: boolean }).final ? " Make clear this is as far as you can go." : ""

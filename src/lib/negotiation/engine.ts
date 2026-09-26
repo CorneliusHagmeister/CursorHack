@@ -194,14 +194,17 @@ function tableWith(ctx: PricingContext, perk: Product | null, extra: Offer[] = [
   );
 }
 
-/** All subsets of the available terms */
-function termSubsets(ctx: PricingContext): TermId[][] {
-  const ids = availableTerms(ctx).map((t) => t.id);
+function subsetsOf(ids: TermId[]): TermId[][] {
   const subsets: TermId[][] = [];
   for (let mask = 0; mask < 1 << ids.length; mask++) {
     subsets.push(ids.filter((_, i) => mask & (1 << i)));
   }
   return subsets;
+}
+
+/** All subsets of the available terms */
+function termSubsets(ctx: PricingContext): TermId[][] {
+  return subsetsOf(availableTerms(ctx).map((t) => t.id));
 }
 
 /**
@@ -379,15 +382,15 @@ export function applyBuyerTurn(
     };
   }
 
-  // 3. Buyer proposes terms without a price: quote the deal for them
+  // 3. Buyer proposes terms without a price: quote the deal for them, keeping
+  //    only the commitments that actually improve the price (no free lunch for us)
   if (buyerTerms.length > 0) {
-    const offer = makeOffer(
-      ctx,
-      buyerTerms,
-      dealPerk,
-      dealExtras,
-      priceFor(ctx, buyerTerms, dealPerk, dealExtras, pressure)
-    );
+    const best = priceFor(ctx, buyerTerms, dealPerk, dealExtras, pressure);
+    const needed =
+      subsetsOf(buyerTerms)
+        .filter((t) => priceFor(ctx, t, dealPerk, dealExtras, pressure) === best)
+        .sort((a, b) => a.length - b.length)[0] ?? buyerTerms;
+    const offer = makeOffer(ctx, needed, dealPerk, dealExtras, best);
     return { next: onTable([offer]), decision: { type: "quote", offer } };
   }
 
