@@ -30,6 +30,8 @@ export type TranscriptEntry = {
   text: string;
   counterOffer?: number;
   offerTerms?: TermId[];
+  decision?: Decision["type"]; // merchant lines: what the engine decided
+  offer?: Offer | null; // merchant lines: the offer this message is about
   at: string;
 };
 

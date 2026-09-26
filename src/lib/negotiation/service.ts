@@ -11,7 +11,7 @@ import {
 } from "./engine";
 import { getPricingContext } from "./policies";
 import { SESSION_TTL_SECONDS, getNegotiation, saveNegotiation } from "./sessions";
-import type { BuyerTurn, Negotiation, PricingContext } from "./types";
+import type { BuyerTurn, Decision, Negotiation, Offer, PricingContext } from "./types";
 import { merchantReply } from "./voice";
 
 function guidance(neg: Negotiation): string {
@@ -60,6 +60,23 @@ export function publicView(
   };
 }
 
+/** The offer a merchant message is about, shown as a card in the dashboard */
+function offerFor(decision: Decision, neg: Negotiation): Offer | null {
+  switch (decision.type) {
+    case "accept_offer":
+    case "accept_counter":
+    case "conditional":
+    case "quote":
+      return decision.offer;
+    case "hold":
+      return decision.best;
+    case "opening":
+      return neg.offers.find((o) => o.perk) ?? null;
+    case "info":
+      return null;
+  }
+}
+
 async function load(id: string): Promise<Negotiation> {
   const neg = await getNegotiation(id);
   if (!neg) throw new NegotiationError(404, `Negotiation "${id}" not found or expired`);
@@ -83,7 +100,15 @@ export async function startNegotiation(input: {
   const reply = await merchantReply(neg, { type: "opening" }, ctx);
   neg = {
     ...neg,
-    transcript: [{ role: "merchant", text: reply.text, at: now.toISOString() }],
+    transcript: [
+      {
+        role: "merchant",
+        text: reply.text,
+        decision: "opening",
+        offer: offerFor({ type: "opening" }, neg),
+        at: now.toISOString(),
+      },
+    ],
   };
   await saveNegotiation(neg, { newEntries: 1, decision: "opening" });
   return { merchantReply: reply.text, replySource: reply.source, ...publicView(neg, ctx) };
@@ -116,15 +141,25 @@ export async function sendMessage(id: string, turn: BuyerTurn) {
   const current = await load(id);
   const ctx = await pricing(current.productId);
   const { next, decision } = applyBuyerTurn(current, turn, ctx);
+  // Buyer line goes out first so the dashboard can show it (and "typing…")
+  // while the merchant reply is being written
+  await saveNegotiation(next, { newEntries: 1 });
   const reply = await merchantReply(next, decision, ctx, turn.message, turn.counterOffer);
   const neg: Negotiation = {
     ...next,
+    updatedAt: new Date().toISOString(),
     transcript: [
       ...next.transcript,
-      { role: "merchant", text: reply.text, at: new Date().toISOString() },
+      {
+        role: "merchant",
+        text: reply.text,
+        decision: decision.type,
+        offer: offerFor(decision, next),
+        at: new Date().toISOString(),
+      },
     ],
   };
-  await saveNegotiation(neg, { newEntries: 2, decision: decision.type });
+  await saveNegotiation(neg, { newEntries: 1, decision: decision.type });
   return {
     merchantReply: reply.text,
     replySource: reply.source,
