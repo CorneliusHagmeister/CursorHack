@@ -35,7 +35,7 @@ Quick path: open `/login` → **Continue as demo shopper** → product → Make 
 | Ad | `/?utm_campaign=raw-denim` then open a product | Campaign intent in the opener. No PII. |
 | Login | `/login` → Continue as demo shopper | Sam's W31, £90 ceiling, abandoned A.P.C. |
 | Agent | `Authorization: Bearer il_demo_agent_token` | Same as login over REST or MCP |
-| One-time code | Account → Copy a note for your agent. Agent opens `/login` and enters the code. Nothing is active until that note is copied. | Size, budget, and past buys. Password stays with the shopper. The code works once. |
+| One-time link | Account → Give your agent a sign-in link. The agent opens it and `/login` is already filled in. Nothing is active until that link is made. | Size, budget, and past buys. Password stays with the shopper. The link works once. |
 
 ## Stage path
 
@@ -101,3 +101,7 @@ supabase db query --linked -f supabase/seed.sql
 ```
 
 Copy `.env.example` into `.env.local` with the project URL and publishable key. Without env, the app keeps using the seed catalogue and file store.
+
+## Final checklist
+
+Before the pitch, say **final checklist**. The agent runs [docs/hackathon/final-checklist.md](docs/hackathon/final-checklist.md): live URL, writeup, `/pitch` with a QR for Mangle and for Cornelius, and a demo recording.
