@@ -12,6 +12,8 @@ type Offer = {
   price: number;
   perk: { brand: string; name: string; listPrice: number; image: string | null } | null;
   terms: string[];
+  extras?: string[];
+  dealValue?: number;
 };
 
 type Entry = {
@@ -40,6 +42,11 @@ const TERM_LABELS: Record<string, string> = {
   final_sale: "final sale",
   standard_shipping: "standard shipping",
   fit_review: "fit review",
+  collect_london: "collect in London",
+};
+
+const EXTRA_LABELS: Record<string, string> = {
+  free_hemming: "free hemming",
 };
 
 const STATUS_STYLE: Record<LiveNegotiation["status"], string> = {
@@ -60,6 +67,7 @@ function describeOffer(o: Offer) {
   return [
     gbp(o.price),
     o.perk ? `with free ${o.perk.brand} ${o.perk.name}` : null,
+    o.extras?.length ? `+ ${o.extras.map((e) => EXTRA_LABELS[e] ?? e).join(" + ")}` : null,
     o.terms.length ? `for ${termsText(o.terms)}` : null,
   ]
     .filter(Boolean)
@@ -71,7 +79,7 @@ const DECISION_LABEL: Record<string, { text: string; style: string }> = {
   opening: { text: "Opened", style: "bg-stone-200 text-stone-700" },
   conditional: { text: "Asked for terms", style: "bg-amber-100 text-amber-900" },
   quote: { text: "Quoted", style: "bg-sky-100 text-sky-900" },
-  hold: { text: "Held firm", style: "bg-rose-100 text-rose-900" },
+  counter: { text: "Proposed a deal", style: "bg-rose-100 text-rose-900" },
   accept_offer: { text: "Deal", style: "bg-emerald-100 text-emerald-900" },
   accept_counter: { text: "Deal", style: "bg-emerald-100 text-emerald-900" },
 };
@@ -105,6 +113,18 @@ function OfferCard({ offer, product }: { offer: Offer; product: LiveNegotiation[
             </span>
           )}
         </p>
+        {(offer.extras?.length || (offer.dealValue ?? 0) > 0) && (
+          <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-stone-600">
+            {offer.extras?.map((e) => (
+              <span key={e} className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-900">
+                {EXTRA_LABELS[e] ?? e}
+              </span>
+            ))}
+            {(offer.dealValue ?? 0) > 0 && (
+              <span className="text-emerald-800">{gbp(offer.dealValue!)} deal value</span>
+            )}
+          </p>
+        )}
         {offer.terms.length > 0 && (
           <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-stone-600">
             Buyer gives

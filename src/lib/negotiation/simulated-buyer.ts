@@ -38,9 +38,9 @@ export async function startSimulatedBuyer(productId?: string): Promise<Started> 
 }
 
 /**
- * The rest of the scripted haggle: ask for a discount, counter at ~85% of
- * list, then take whatever terms the merchant asks for (or offer some if it
- * holds), accept, and buy.
+ * The rest of the scripted haggle, the way a shopper's agent would do it:
+ * ask about the price, counter at ~85% of list, offer some commitments if the
+ * merchant comes back with a deal, then take the best-value deal and buy.
  */
 export async function runSimulatedBuyer(s: Started): Promise<void> {
   try {
@@ -56,21 +56,25 @@ export async function runSimulatedBuyer(s: Started): Promise<void> {
       counterOffer: target,
     });
 
-    if (res.status === "open" && res.decision === "hold") {
+    // The merchant answered with a deal; push once more, then take the best deal on the table
+    if (res.status === "open" && res.decision === "counter") {
       await pause();
       res = await sendMessage(s.negotiationId, {
-        message: "Understood. We can do final sale and standard shipping — what would that come to?",
+        message: "Can you do any better if we take final sale and standard shipping?",
         offerTerms: ["final_sale", "standard_shipping"],
       });
     }
 
     if (res.status === "open") {
-      const offer = res.offers.find((o) => o.terms.length > 0) ?? res.offers[0];
+      const offer =
+        [...res.offers].sort((a, b) => b.dealValue - a.dealValue || a.price - b.price)[0] ?? res.offers[0];
       await pause();
       res = await sendMessage(s.negotiationId, {
-        message: offer.terms.length
-          ? "That works for us — we'll take it on those terms."
-          : "Alright, we'll take it.",
+        message: offer.perk
+          ? "That's a good package — we'll take the full deal."
+          : offer.terms.length
+            ? "That works for us — we'll take it on those terms."
+            : "Alright, we'll take it.",
         acceptOfferId: offer.offerId,
       });
     }

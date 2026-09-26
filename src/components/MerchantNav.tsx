@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 const LINKS = [
   { href: "/merchant", label: "Orders" },
   { href: "/merchant/live", label: "Live negotiations" },
+  { href: "/merchant/deals", label: "Deal settings" },
 ];
 
 export function MerchantNav() {

@@ -6,15 +6,8 @@ This is separate from the on-site deal desk (`/api/negotiate` + `NegotiatePanel`
 
 ## How it works
 
-- **Give to get, like enterprise pricing.** [`src/lib/negotiation/engine.ts`](../src/lib/negotiation/engine.ts) decides every number, and the price never drops for nothing. Each reduction is traded for a buyer commitment (a *term*):
-
-  | Term id | Buyer gives | Off list |
-  |---|---|---|
-  | `final_sale` | Final sale, no returns | 8% |
-  | `standard_shipping` | Standard 5-day shipping instead of next-day | £4 |
-  | `fit_review` | Fit review with photos within 14 days | 6% |
-
-  A hidden floor per product (20% under list by default) caps the total. A bare counter-offer gets "that price works if you give X", where X is the smallest trade that makes it work. If nothing gets that low, the merchant holds and shows its best offer. Pair & Perk adds value (a free pair at list price) instead of cutting price.
+- **Deals, not discounts (enterprise buying).** [`src/lib/negotiation/engine.ts`](../src/lib/negotiation/engine.ts) decides every number. Every offer is a package: what the buyer **gets** (the pair, a free Pair & Perk pair, free hemming) and what they **commit to** (final sale, standard shipping, a fit review, collecting in London). Price only moves in exchange for commitments. It starts at the merchant's **target** and approaches the hidden **walk-away** price in shrinking steps (e.g. £48 → £46 → £45 → £44) only under sustained pressure, so a lowball never reveals it. When a buyer's number doesn't work, the merchant proposes a richer deal (bundle + extras, with its `dealValue`) rather than just a lower price.
+- **Per-item settings** (`/merchant/deals`, merchant login): target and walk-away (masked), selling priority (hold / normal / clear, clear-by date), return risk and high-value flag, what we're willing to compromise on (commitments and what each is worth, value-adds with cost vs buyer value, which free pairs to bundle and which to push first), and voice notes (selling points, never-say). A simulator runs the real engine against unsaved settings.
 - **Claude only writes the words.** [`voice.ts`](../src/lib/negotiation/voice.ts) turns the engine's decision into a short reply from "Mo". Claude never sees the floor. If a reply mentions any £ amount or percentage the engine didn't produce, it is replaced by a template. Templates are also used when no key is set or the call fails.
 - **Only structured fields are binding.** Prices go in `counterOffer` / `acceptOfferId`, never parsed from chat text. Purchase checks `price` against the server's agreed deal.
 
@@ -24,7 +17,7 @@ This is separate from the on-site deal desk (`/api/negotiate` + `NegotiatePanel`
 listProducts → startNegotiation → sendNegotiationMessage (repeat) → purchaseNegotiatedDeal
 ```
 
-Every response includes `availableTerms` (the menu above, in £ for this product), `offers` (what's on the table right now, each with the `terms` the buyer commits to), `status` (`open` → `agreed` → `purchased`) and a `guidance` string telling the agent what it can do next.
+Every response includes `negotiables` (what the merchant will flex on: commitments with what each is worth, value-adds, free pairs — never floors), `offers` (deals on the table, each with `terms`, `perk`, `extras` and `dealValue`), `status` (`open` → `agreed` → `purchased`) and a `guidance` string telling the agent what it can do next.
 
 ## Endpoints
 
@@ -64,7 +57,7 @@ Optional: `perkId` picks a specific free pair.
 
 Body fields: `message` (text), plus:
 
-- `counterOffer`: GBP number. The merchant replies with the terms that make it work (`decision: conditional`), or holds (`hold`). Add `includePerk: true` to counter on the bundle.
+- `counterOffer`: GBP number. If commitments make it work, the merchant says which (`decision: conditional`); if not, it proposes a deal (`counter`). Add `includePerk: true` to counter on the bundle.
 - `offerTerms`: term ids the buyer will give. Alone, you get a price quote (`quote`). With `counterOffer`, it's a full proposal; if it works, the deal closes (`accept_counter`).
 - `acceptOfferId`: one of the current `offers[].offerId` (not combined with `counterOffer`).
 
@@ -75,7 +68,7 @@ curl -X POST $HOST/api/negotiations/$ID/messages -H 'content-type: application/j
   -d '{"message":"Would you do 75?","counterOffer":75}'
 ```
 
-The response adds `decision`: `conditional`, `quote`, `hold`, `accept_counter`, `accept_offer` or `info`.
+The response adds `decision`: `conditional`, `quote`, `counter`, `accept_counter`, `accept_offer` or `info`.
 
 Example run on the £95 A.P.C.:
 

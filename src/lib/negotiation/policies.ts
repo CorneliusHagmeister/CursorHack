@@ -3,15 +3,29 @@ import path from "path";
 import { getPerkOptions, getProduct, listProducts } from "@/lib/products";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
-import type { PricingContext, ProductPolicy, TermId } from "./types";
+import type {
+  ExtraId,
+  PricingContext,
+  Priority,
+  ProductPolicy,
+  RiskLevel,
+  TermId,
+} from "./types";
 
-/** The give-gets a merchant can offer; values below are the defaults */
-export const TERM_CATALOG: { id: TermId; label: string; share?: number; flat?: number }[] = [
-  { id: "final_sale", label: "Final sale — no returns", share: 0.08 },
-  { id: "standard_shipping", label: "Standard 5-day shipping instead of next-day", flat: 4 },
-  { id: "fit_review", label: "Post a fit review with photos within 14 days", share: 0.06 },
+/** Buyer commitments the merchant can trade price for */
+export const TERM_CATALOG: { id: TermId; label: string }[] = [
+  { id: "final_sale", label: "Final sale — no returns" },
+  { id: "standard_shipping", label: "Standard 5-day shipping instead of next-day" },
+  { id: "fit_review", label: "Post a fit review with photos within 14 days" },
+  { id: "collect_london", label: "Collect in person from our London studio" },
 ];
 export const TERM_IDS: TermId[] = TERM_CATALOG.map((t) => t.id);
+
+/** Value the merchant can add instead of cutting price */
+export const EXTRA_CATALOG: { id: ExtraId; label: string }[] = [
+  { id: "free_hemming", label: "Free hemming to your inseam" },
+];
+export const EXTRA_IDS: ExtraId[] = EXTRA_CATALOG.map((e) => e.id);
 
 const DEFAULT_MAX_DISCOUNT = 0.2;
 const DEFAULT_MAX_DISCOUNT_BY_ID: Record<string, number> = {
@@ -20,49 +34,102 @@ const DEFAULT_MAX_DISCOUNT_BY_ID: Record<string, number> = {
   "wrangler-texas": 0.25,
   "levi-550-relaxed": 0.3, // been on the rail a while
 };
+const DEFAULT_PRIORITY: Record<string, Priority> = {
+  "apc-petit-new": "hold",
+  "levi-550-relaxed": "clear",
+  "uniqlo-wide": "clear",
+};
+const DEFAULT_RETURN_RISK: Record<string, RiskLevel> = {
+  "nudie-lean-dean": "high", // dry slim denim, fit is a gamble
+  "apc-petit-new": "high", // raw denim shrinks
+  "levi-550-relaxed": "low",
+};
+/** What final sale is worth, as a share of list, by how often an item comes back */
+const FINAL_SALE_SHARE: Record<RiskLevel, number> = { low: 0.04, medium: 0.07, high: 0.11 };
+
+export function finalSaleWorth(product: Product, risk: RiskLevel): number {
+  return Math.max(1, Math.round(product.price * FINAL_SALE_SHARE[risk]));
+}
 
 export function defaultPolicy(product: Product): ProductPolicy {
   const maxDiscount = DEFAULT_MAX_DISCOUNT_BY_ID[product.id] ?? DEFAULT_MAX_DISCOUNT;
+  const floorPrice = Math.ceil(product.price * (1 - maxDiscount));
+  const returnRisk = DEFAULT_RETURN_RISK[product.id] ?? "medium";
+  const eligible = getPerkOptions(product.id);
   return {
     negotiable: true,
-    floorPrice: Math.ceil(product.price * (1 - maxDiscount)),
-    terms: Object.fromEntries(
-      TERM_CATALOG.map((t) => [
-        t.id,
-        { enabled: true, discount: Math.max(1, t.flat ?? Math.round(product.price * (t.share ?? 0))) },
-      ])
-    ) as ProductPolicy["terms"],
+    // Aim to keep about half of the room we have
+    targetPrice: Math.round(product.price - (product.price - floorPrice) / 2),
+    floorPrice,
+    priority: DEFAULT_PRIORITY[product.id] ?? (product.perkEligible ? "clear" : "normal"),
+    clearBy: null,
+    returnRisk,
+    highValue: false,
+    terms: {
+      final_sale: { enabled: true, discount: finalSaleWorth(product, returnRisk) },
+      standard_shipping: { enabled: true, discount: 4 },
+      fit_review: { enabled: true, discount: Math.max(1, Math.round(product.price * 0.05)) },
+      collect_london: { enabled: product.city === "London", discount: 3 },
+    },
+    extras: {
+      free_hemming: { enabled: true, cost: 4, value: 12 },
+    },
     perkEnabled: true,
     perkIds: null,
+    // Push the cheapest eligible pairs first: they cost us least to give away
+    pushPerkIds: eligible.filter((p) => p.price <= 20).map((p) => p.id),
     sellingPoints: "",
+    avoidSaying: "",
   };
 }
 
-/** Clamp and sanitise a policy against its product; throws on unusable input */
-export function normalizePolicy(product: Product, input: ProductPolicy): ProductPolicy {
-  const money = (n: unknown, max: number) => {
-    const v = Math.round(Number(n));
-    if (!Number.isFinite(v)) throw new Error("Prices must be numbers");
-    return Math.min(max, Math.max(0, v));
+/** Merge onto defaults, clamp and sanitise against the product */
+export function normalizePolicy(product: Product, input: Partial<ProductPolicy>): ProductPolicy {
+  const d = defaultPolicy(product);
+  const money = (n: unknown, fallback: number, max = product.price) => {
+    const v = Math.round(Number(n ?? fallback));
+    return Number.isFinite(v) ? Math.min(max, Math.max(0, v)) : fallback;
   };
+  const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T =>
+    options.includes(v as T) ? (v as T) : fallback;
   const eligible = new Set(getPerkOptions(product.id).map((p) => p.id));
+
+  const floorPrice = Math.max(1, money(input.floorPrice, d.floorPrice));
+  const targetPrice = Math.min(product.price, Math.max(floorPrice, money(input.targetPrice, d.targetPrice)));
   return {
-    negotiable: Boolean(input.negotiable),
-    floorPrice: Math.max(1, money(input.floorPrice, product.price)),
+    negotiable: input.negotiable ?? d.negotiable,
+    targetPrice,
+    floorPrice,
+    priority: oneOf(input.priority, ["hold", "normal", "clear"] as const, d.priority),
+    clearBy: typeof input.clearBy === "string" && /^\d{4}-\d{2}-\d{2}/.test(input.clearBy) ? input.clearBy.slice(0, 10) : null,
+    returnRisk: oneOf(input.returnRisk, ["low", "medium", "high"] as const, d.returnRisk),
+    highValue: Boolean(input.highValue ?? d.highValue),
     terms: Object.fromEntries(
       TERM_IDS.map((id) => [
         id,
         {
-          enabled: Boolean(input.terms?.[id]?.enabled),
-          discount: money(input.terms?.[id]?.discount ?? 0, product.price),
+          enabled: Boolean(input.terms?.[id]?.enabled ?? d.terms[id].enabled),
+          discount: money(input.terms?.[id]?.discount, d.terms[id].discount),
         },
       ])
     ) as ProductPolicy["terms"],
-    perkEnabled: Boolean(input.perkEnabled),
-    perkIds: Array.isArray(input.perkIds)
-      ? input.perkIds.filter((id) => eligible.has(id))
-      : null,
+    extras: Object.fromEntries(
+      EXTRA_IDS.map((id) => [
+        id,
+        {
+          enabled: Boolean(input.extras?.[id]?.enabled ?? d.extras[id].enabled),
+          cost: money(input.extras?.[id]?.cost, d.extras[id].cost),
+          value: money(input.extras?.[id]?.value, d.extras[id].value),
+        },
+      ])
+    ) as ProductPolicy["extras"],
+    perkEnabled: Boolean(input.perkEnabled ?? d.perkEnabled),
+    perkIds: Array.isArray(input.perkIds) ? input.perkIds.filter((id) => eligible.has(id)) : null,
+    pushPerkIds: Array.isArray(input.pushPerkIds)
+      ? input.pushPerkIds.filter((id) => eligible.has(id))
+      : d.pushPerkIds,
     sellingPoints: String(input.sellingPoints ?? "").slice(0, 500),
+    avoidSaying: String(input.avoidSaying ?? "").slice(0, 300),
   };
 }
 
@@ -133,7 +200,7 @@ export async function listPolicies(): Promise<PricingContext[]> {
   }));
 }
 
-export async function savePolicy(product: Product, input: ProductPolicy): Promise<ProductPolicy> {
+export async function savePolicy(product: Product, input: Partial<ProductPolicy>): Promise<ProductPolicy> {
   const policy = normalizePolicy(product, input);
   await writeOne(product.id, policy);
   return policy;

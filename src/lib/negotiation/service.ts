@@ -5,8 +5,12 @@ import type { Order, OrderItem } from "@/lib/types";
 import {
   NegotiationError,
   applyBuyerTurn,
+  availableExtras,
   availableTerms,
+  dealValue,
+  extraLabels,
   openingTerms,
+  perkOptions,
   termLabels,
 } from "./engine";
 import { getPricingContext } from "./policies";
@@ -18,9 +22,9 @@ function guidance(neg: Negotiation): string {
   switch (neg.status) {
     case "open":
       return [
-        "The merchant only lowers the price in exchange for terms (see availableTerms).",
-        "Send offerTerms (term ids) to get a price quote, or counterOffer (GBP) and the merchant will say which terms make that price work; set includePerk=true to negotiate the Pair & Perk bundle.",
-        "Send acceptOfferId (one of offers[].offerId) to lock in a deal. Tell the user what each offer's terms commit them to before accepting.",
+        "The merchant sells deals, not discounts: see negotiables for what it will flex on (commitments it trades price for, value it can add, free pairs).",
+        "Send offerTerms (commitment ids) to get a deal quote, or counterOffer (GBP) and the merchant will propose the deal that makes it work; set includePerk=true to negotiate the Pair & Perk bundle.",
+        "Send acceptOfferId (one of offers[].offerId) to lock in a deal. Tell the user what each deal gives them (dealValue, perk, extras) and what it commits them to before accepting.",
       ].join(" ");
     case "agreed":
       return `Deal agreed at £${neg.agreed?.price}. Confirm with the user, then call purchaseNegotiatedDeal with price=${neg.agreed?.price} and their name, email and shipping city.`;
@@ -50,9 +54,24 @@ export function publicView(
       condition: product.condition,
     },
     round: neg.round,
+    // What the merchant will flex on. Floors and targets are never exposed.
+    negotiables: {
+      commitments: availableTerms(ctx),
+      valueAdds: availableExtras(ctx).map((id) => ({
+        id,
+        label: extraLabels([id])[0],
+        value: ctx.policy.extras[id].value,
+      })),
+      freePairs: perkOptions(ctx).map((p) => ({
+        productId: p.id,
+        brand: p.brand,
+        name: p.name,
+        listPrice: p.price,
+      })),
+    },
     availableTerms: availableTerms(ctx),
-    offers: neg.status === "open" ? neg.offers : [],
-    agreedDeal: neg.agreed,
+    offers: (neg.status === "open" ? neg.offers : []).map((o) => ({ ...o, dealValue: dealValue(ctx, o) })),
+    agreedDeal: neg.agreed ? { ...neg.agreed, dealValue: dealValue(ctx, neg.agreed) } : null,
     orderId: neg.orderId,
     expiresAt: neg.expiresAt,
     guidance: guidance(neg),
@@ -67,9 +86,8 @@ function offerFor(decision: Decision, neg: Negotiation): Offer | null {
     case "accept_counter":
     case "conditional":
     case "quote":
+    case "counter":
       return decision.offer;
-    case "hold":
-      return decision.best;
     case "opening":
       return neg.offers.find((o) => o.perk) ?? null;
     case "info":

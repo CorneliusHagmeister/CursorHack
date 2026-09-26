@@ -1,6 +1,6 @@
 import { getPerkOptions, getProduct } from "@/lib/products";
-import { applyBuyerTurn, policySummary, requireProduct } from "./engine";
-import { normalizePolicy } from "./policies";
+import { applyBuyerTurn, dealValue, policySummary, requireProduct } from "./engine";
+import { listPolicies, normalizePolicy } from "./policies";
 import { newNegotiation } from "./service";
 import { listRecentNegotiations } from "./sessions";
 import type { BuyerTurn, Negotiation, Offer, PricingContext, ProductPolicy } from "./types";
@@ -54,8 +54,11 @@ function withImages<T extends Offer>(offer: T) {
 /** Recent negotiations shaped for the merchant's live view */
 export async function liveFeed() {
   const negs = await listRecentNegotiations();
+  const policies = new Map((await listPolicies()).map((c) => [c.product.id, c]));
   return negs.map((n) => {
     const product = getProduct(n.productId);
+    const ctx = policies.get(n.productId);
+    const withValue = <T extends Offer>(o: T) => ({ ...withImages(o), dealValue: ctx ? dealValue(ctx, o) : 0 });
     return {
       id: n.id,
       status: n.status,
@@ -63,10 +66,10 @@ export async function liveFeed() {
       product: product
         ? { id: product.id, brand: product.brand, name: product.name, image: product.image, listPrice: product.price }
         : { id: n.productId, brand: "", name: n.productId, image: null, listPrice: n.listPrice },
-      offers: (n.status === "open" ? n.offers : []).map(withImages),
-      agreed: n.agreed ? withImages(n.agreed) : null,
+      offers: (n.status === "open" ? n.offers : []).map(withValue),
+      agreed: n.agreed ? withValue(n.agreed) : null,
       orderId: n.orderId,
-      transcript: n.transcript.map((t) => (t.offer ? { ...t, offer: withImages(t.offer) } : t)),
+      transcript: n.transcript.map((t) => (t.offer ? { ...t, offer: withValue(t.offer) } : t)),
       updatedAt: n.updatedAt,
     };
   });

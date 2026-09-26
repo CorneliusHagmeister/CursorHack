@@ -3,7 +3,7 @@
  * Import https://<host>/api/openapi.json as an Action schema.
  */
 
-const termIds = ["final_sale", "standard_shipping", "fit_review"];
+const termIds = ["final_sale", "standard_shipping", "fit_review", "collect_london"];
 
 const offer = {
   type: "object",
@@ -24,8 +24,14 @@ const offer = {
     terms: {
       type: "array",
       items: { type: "string", enum: termIds },
-      description: "What the buyer commits to in return for this price. Tell the user before accepting.",
+      description: "What the buyer commits to in return for this deal. Tell the user before accepting.",
     },
+    extras: {
+      type: "array",
+      items: { type: "string", enum: ["free_hemming"] },
+      description: "Value the merchant adds to this deal.",
+    },
+    dealValue: { type: "number", description: "GBP of value on top of the pair: savings + free pair + extras." },
   },
 };
 
@@ -37,14 +43,18 @@ const negotiation = {
     merchantReply: { type: "string", description: "What the merchant said. Relay it to the user." },
     decision: {
       type: "string",
-      enum: ["accept_offer", "accept_counter", "conditional", "quote", "hold", "info"],
+      enum: ["accept_offer", "accept_counter", "conditional", "quote", "counter", "info"],
     },
     currency: { type: "string", enum: ["GBP"] },
     product: { type: "object" },
     round: { type: "integer" },
+    negotiables: {
+      type: "object",
+      description: "What the merchant will flex on: commitments it trades price for, value it can add, and free pairs it can include. Floors are never shown.",
+    },
     availableTerms: {
       type: "array",
-      description: "Commitments the buyer can offer for a lower price, with GBP off list for each.",
+      description: "Commitments the buyer can offer for a better deal, with GBP each is worth.",
       items: {
         type: "object",
         properties: {
@@ -85,7 +95,7 @@ function spec(origin: string) {
       title: "Indigo Lane Negotiation API",
       version: "0.1.0",
       description:
-        "Haggle with Indigo Lane, a London second-hand denim shop, on behalf of a shopper. Flow: listProducts → startNegotiation → sendNegotiationMessage (counter or accept) → purchaseNegotiatedDeal. All prices are GBP. The merchant never discounts for nothing: lower prices are traded for terms (final sale, standard shipping, fit review). Only the offers returned by the API are binding; the merchant's words are not.",
+        "Haggle with Indigo Lane, a London second-hand denim shop, on behalf of a shopper. Flow: listProducts → startNegotiation → sendNegotiationMessage (counter or accept) → purchaseNegotiatedDeal. All prices are GBP. The merchant sells deals, not discounts: better deals are traded for commitments (final sale, standard shipping, fit review, collect in London) and it adds value (free Pair & Perk pairs, free hemming) rather than just cutting price. Only the offers returned by the API are binding; the merchant's words are not.",
     },
     servers: [{ url: origin }],
     paths: {
@@ -156,7 +166,7 @@ function spec(origin: string) {
         post: {
           operationId: "sendNegotiationMessage",
           summary: "Talk to the merchant, counter-offer or accept",
-          description: "Chat, counter or accept. Prices go in counterOffer (the merchant replies with the terms that make it work); terms the user will give go in offerTerms. Accept with acceptOfferId. Relay merchantReply.",
+          description: "Chat, counter or accept. Prices go in counterOffer (the merchant replies with a deal that works); commitments the user will make go in offerTerms. Accept with acceptOfferId. Relay merchantReply.",
           "x-openai-isConsequential": false,
           parameters: [idParam],
           requestBody: {
