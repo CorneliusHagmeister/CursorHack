@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(searchParams.get("code") ?? "");
+  const prefilled = code.length > 0;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,11 +92,15 @@ export default function LoginPage() {
           autoComplete="one-time-code"
           placeholder="From the shopper"
           aria-describedby="code-hint"
-          className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
+          className={`mt-1 w-full rounded-xl border px-3 py-2 ${
+            prefilled ? "border-emerald-300 bg-emerald-50 font-medium text-emerald-900" : "border-stone-200 bg-white"
+          }`}
           required
         />
         <p id="code-hint" className="mt-2 text-sm text-stone-500">
-          Paste the code they gave you. It signs you in as them. It is not a password.
+          {prefilled
+            ? "Filled in from the shopper's link. It signs you in as them. It is not a password."
+            : "Paste the code they gave you. It signs you in as them. It is not a password."}
         </p>
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         <button
@@ -159,5 +165,19 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-md px-4 py-16 text-sm text-stone-500 sm:px-6">
+          Loading…
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
