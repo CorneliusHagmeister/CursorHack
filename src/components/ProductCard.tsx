@@ -1,6 +1,11 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/lib/types";
 import { gbp } from "@/lib/format";
+
+export function productAlt(product: Pick<Product, "brand" | "name" | "wash" | "cut">) {
+  return `${product.brand} ${product.name}, ${product.wash.toLowerCase()} ${product.cut.toLowerCase()}`;
+}
 
 export function ProductCard({ product }: { product: Product }) {
   return (
@@ -8,23 +13,19 @@ export function ProductCard({ product }: { product: Product }) {
       href={`/product/${product.id}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
     >
-      <div
-        className="relative aspect-[4/5] overflow-hidden"
-        style={{
-          background: `linear-gradient(160deg, ${product.accent} 0%, #0f172a 100%)`,
-        }}
-      >
-        <div className="absolute inset-0 opacity-30 mix-blend-overlay"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 3px)",
-          }}
+      <div className="relative aspect-[4/5] overflow-hidden bg-stone-200">
+        <Image
+          src={product.image}
+          alt={productAlt(product)}
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className="object-cover transition duration-300 group-hover:scale-[1.03]"
         />
         <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur">
+          <span className="rounded-full bg-indigo-950/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur">
             W{product.waist} / L{product.length}
           </span>
-          <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur">
+          <span className="rounded-full bg-indigo-950/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur">
             {product.condition}
           </span>
           {product.perkEligible && (

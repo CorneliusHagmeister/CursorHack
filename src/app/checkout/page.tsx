@@ -1,8 +1,10 @@
 "use client";
 
 import { Suspense, useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { productAlt } from "@/components/ProductCard";
 import { PRODUCTS } from "@/lib/products";
 import { RETURNING_SHOPPER } from "@/lib/shopper";
 import { gbp } from "@/lib/format";
@@ -89,18 +91,10 @@ function CheckoutForm() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="text-3xl font-semibold text-indigo-950">Checkout</h1>
-      <p className="mt-1 text-sm text-stone-600">
-        {negotiated
-          ? "Negotiated Pair & Perk · returning shopper profile prefilled"
-          : "Pair & Perk · pay on primary"}
-        {perk ? ", complementary perk free" : ""}
-      </p>
 
       {negotiated && summary && (
         <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-indigo-700">
-            Deal from live negotiation
-          </p>
+          <p className="text-sm font-medium text-indigo-950">Deal from live negotiation</p>
           <p className="mt-1 font-medium">{summary}</p>
           {concessions && (
             <p className="mt-1 text-xs text-indigo-800">↔ {concessions}</p>
@@ -150,17 +144,24 @@ function CheckoutForm() {
         </div>
 
         <div className="rounded-2xl border border-stone-200 bg-white p-5 lg:col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-stone-500">
-            Order summary
-          </p>
+          <h2 className="text-sm font-medium text-indigo-950">Order summary</h2>
           <ul className="mt-3 space-y-3 text-sm">
-            <li className="flex justify-between gap-2">
-              <span>
-                <span className="font-medium text-indigo-950">
-                  {primary.brand} {primary.name}
-                </span>
-                <span className="block text-xs text-stone-500">
-                  Primary{negotiated ? " · negotiated" : ""}
+            <li className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-3">
+                <Image
+                  src={primary.image}
+                  alt={productAlt(primary)}
+                  width={48}
+                  height={60}
+                  className="h-14 w-11 rounded-md object-cover"
+                />
+                <span>
+                  <span className="font-medium text-indigo-950">
+                    {primary.brand} {primary.name}
+                  </span>
+                  <span className="block text-xs text-stone-500">
+                    Primary{negotiated ? " · negotiated" : ""}
+                  </span>
                 </span>
               </span>
               <span className="text-right tabular-nums">
@@ -173,13 +174,22 @@ function CheckoutForm() {
               </span>
             </li>
             {perk && (
-              <li className="flex justify-between gap-2 rounded-lg bg-emerald-50 px-2 py-1.5">
-                <span>
-                  <span className="font-medium text-indigo-950">
-                    {perk.brand} {perk.name}
-                  </span>
-                  <span className="block text-xs text-emerald-700">
-                    Pair &amp; Perk · free
+              <li className="flex items-center justify-between gap-3 rounded-lg bg-emerald-50 px-2 py-1.5">
+                <span className="flex items-center gap-3">
+                  <Image
+                    src={perk.image}
+                    alt={productAlt(perk)}
+                    width={48}
+                    height={60}
+                    className="h-14 w-11 rounded-md object-cover"
+                  />
+                  <span>
+                    <span className="font-medium text-indigo-950">
+                      {perk.brand} {perk.name}
+                    </span>
+                    <span className="block text-xs text-emerald-700">
+                      Pair &amp; Perk · free
+                    </span>
                   </span>
                 </span>
                 <span className="text-right">

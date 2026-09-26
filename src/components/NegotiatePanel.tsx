@@ -114,13 +114,7 @@ export function NegotiatePanel({ primary }: { primary: Product }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 bg-gradient-to-r from-indigo-950 to-slate-900 px-4 py-3 text-amber-50 sm:px-5">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-200/90">
-            Live negotiation · on-stage
-          </p>
           <h2 className="text-lg font-semibold">Deal desk for {primary.brand}</h2>
-          <p className="text-xs text-indigo-200">
-            Multi-turn · uses remembered fit/brands · applies into checkout
-          </p>
         </div>
         {!started ? (
           <button
@@ -228,9 +222,7 @@ export function NegotiatePanel({ primary }: { primary: Product }) {
         </div>
 
         <aside className="border-t border-stone-200 bg-indigo-50/40 p-4 lg:border-l lg:border-t-0 lg:col-span-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-indigo-800">
-            Working deal
-          </p>
+          <p className="text-sm font-medium text-indigo-950">Working deal</p>
           {deal ? (
             <div className="mt-2 space-y-2 text-sm">
               <p className="font-medium text-indigo-950">{deal.summary}</p>

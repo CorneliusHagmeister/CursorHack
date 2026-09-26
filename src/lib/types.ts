@@ -14,6 +14,8 @@ export type Product = {
   city: string;
   perkEligible: boolean;
   accent: string;
+  /** Public path, e.g. /products/levi-501-indigo.jpg — swap the file to replace the stock shot */
+  image: string;
   tags: string[];
 };
 

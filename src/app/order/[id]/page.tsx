@@ -1,5 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { productAlt } from "@/components/ProductCard";
+import { getProduct } from "@/lib/products";
 import { getOrder } from "@/lib/store";
 import { gbp, formatWhen } from "@/lib/format";
 
@@ -19,12 +22,12 @@ export default async function OrderPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <div className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-8 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
-          Order confirmed
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-indigo-950">
+        <h1 className="text-3xl font-semibold text-indigo-950">
           Thanks, {order.buyerName.split(" ")[0]}
         </h1>
+        <p className="mt-3 inline-flex rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white">
+          Order confirmed
+        </p>
         <p className="mt-2 text-sm text-stone-600">
           {formatWhen(order.createdAt)} · shipping to {order.shippingCity}
         </p>
@@ -35,34 +38,46 @@ export default async function OrderPage({
 
         {order.negotiationSummary && (
           <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-3 text-sm text-indigo-950">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-indigo-700">
-              From live negotiation
-            </p>
+            <p className="text-sm font-medium text-indigo-950">From live negotiation</p>
             <p className="mt-1">{order.negotiationSummary}</p>
           </div>
         )}
 
         <ul className="mt-8 space-y-3">
-          {order.items.map((item) => (
-            <li
-              key={`${item.productId}-${item.role}`}
-              className="flex items-center justify-between rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm"
-            >
-              <div>
-                <p className="font-medium text-indigo-950">
-                  {item.brand} {item.name}
-                </p>
-                <p className="text-xs text-stone-500">
-                  {item.role === "perk"
-                    ? "Pair & Perk · complementary free"
-                    : negotiated
-                      ? "Primary · negotiated"
-                      : "Primary · full price"}
-                </p>
-              </div>
-              <p className="tabular-nums font-medium">{gbp(item.price)}</p>
-            </li>
-          ))}
+          {order.items.map((item) => {
+            const product = getProduct(item.productId);
+            return (
+              <li
+                key={`${item.productId}-${item.role}`}
+                className="flex items-center justify-between rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm"
+              >
+                <div className="flex items-center gap-3">
+                  {product && (
+                    <Image
+                      src={product.image}
+                      alt={productAlt(product)}
+                      width={48}
+                      height={60}
+                      className="h-14 w-11 rounded-md object-cover"
+                    />
+                  )}
+                  <div>
+                    <p className="font-medium text-indigo-950">
+                      {item.brand} {item.name}
+                    </p>
+                    <p className="text-xs text-stone-500">
+                      {item.role === "perk"
+                        ? "Pair & Perk · complementary free"
+                        : negotiated
+                          ? "Primary · negotiated"
+                          : "Primary · full price"}
+                    </p>
+                  </div>
+                </div>
+                <p className="tabular-nums font-medium">{gbp(item.price)}</p>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="mt-6 space-y-1 border-t border-stone-200 pt-4 text-sm">

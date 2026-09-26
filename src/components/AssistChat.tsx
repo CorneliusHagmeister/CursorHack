@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { Product } from "@/lib/types";
+import { productAlt } from "@/components/ProductCard";
 import { gbp } from "@/lib/format";
 import Link from "next/link";
 
@@ -100,21 +102,28 @@ export function AssistChat() {
             ))}
             {matches.length > 0 && (
               <div className="space-y-2 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/50 p-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-indigo-800">
-                  Quick links
-                </p>
+                <p className="text-sm font-medium text-indigo-950">Quick links</p>
                 {matches.map((p) => (
                   <Link
                     key={p.id}
                     href={`/product/${p.id}`}
-                    className="block rounded-lg bg-white px-2 py-1.5 text-xs hover:bg-indigo-50"
+                    className="flex items-center gap-2 rounded-lg bg-white px-2 py-1.5 text-xs hover:bg-indigo-50"
                     onClick={() => setOpen(false)}
                   >
-                    <span className="font-medium text-indigo-950">
-                      {p.brand} {p.name}
-                    </span>{" "}
-                    <span className="text-stone-500">
-                      W{p.waist} · {gbp(p.price)}
+                    <Image
+                      src={p.image}
+                      alt={productAlt(p)}
+                      width={32}
+                      height={40}
+                      className="h-10 w-8 rounded object-cover"
+                    />
+                    <span>
+                      <span className="font-medium text-indigo-950">
+                        {p.brand} {p.name}
+                      </span>{" "}
+                      <span className="text-stone-500">
+                        W{p.waist} · {gbp(p.price)}
+                      </span>
                     </span>
                   </Link>
                 ))}

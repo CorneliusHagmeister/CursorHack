@@ -1,4 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
+import { productAlt } from "@/components/ProductCard";
 import { listOrders } from "@/lib/store";
 import { listProducts } from "@/lib/products";
 import { gbp, formatWhen } from "@/lib/format";
@@ -15,21 +17,13 @@ export default async function MerchantPage() {
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-            Merchant
-          </p>
-          <h1 className="mt-1 text-3xl font-semibold text-indigo-950">
-            Indigo Lane desk
-          </h1>
-          <p className="mt-1 text-sm text-stone-600">
-            Shared catalogue · negotiated Pair &amp; Perk orders (file/memory store)
-          </p>
+          <h1 className="text-3xl font-semibold text-indigo-950">Indigo Lane desk</h1>
         </div>
         <Link
           href="/"
           className="rounded-full border border-stone-300 px-4 py-2 text-sm text-stone-700 hover:bg-white"
         >
-          ← Consumer storefront
+          Consumer storefront
         </Link>
       </div>
 
@@ -43,9 +37,7 @@ export default async function MerchantPage() {
             key={label}
             className="rounded-2xl border border-stone-200 bg-white px-5 py-4"
           >
-            <p className="text-xs uppercase tracking-wider text-stone-500">
-              {label}
-            </p>
+            <p className="text-sm text-stone-500">{label}</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums text-indigo-950">
               {value}
             </p>
@@ -99,7 +91,7 @@ export default async function MerchantPage() {
                 <ul className="mt-4 space-y-1 text-sm text-stone-700">
                   {order.items.map((item) => (
                     <li key={`${order.id}-${item.productId}-${item.role}`}>
-                      {item.role === "perk" ? "🎁" : "👖"} {item.brand}{" "}
+                      {item.brand}{" "}
                       {item.name}{" "}
                       <span className="text-stone-400">
                         ({item.role}) · {gbp(item.price)}
@@ -133,7 +125,7 @@ export default async function MerchantPage() {
         </h2>
         <div className="mt-4 overflow-x-auto rounded-2xl border border-stone-200 bg-white">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-stone-100 text-xs uppercase tracking-wider text-stone-500">
+            <thead className="border-b border-stone-100 text-sm text-stone-500">
               <tr>
                 <th className="px-4 py-3">Item</th>
                 <th className="px-4 py-3">Size</th>
@@ -148,11 +140,22 @@ export default async function MerchantPage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/product/${p.id}`}
-                      className="font-medium text-indigo-900 hover:underline"
+                      className="flex items-center gap-3 font-medium text-indigo-900 hover:underline"
                     >
-                      {p.brand} {p.name}
+                      <Image
+                        src={p.image}
+                        alt={productAlt(p)}
+                        width={40}
+                        height={50}
+                        className="h-12 w-10 rounded-md object-cover"
+                      />
+                      <span>
+                        {p.brand} {p.name}
+                        <span className="block text-xs font-normal text-stone-500">
+                          {p.city}
+                        </span>
+                      </span>
                     </Link>
-                    <p className="text-xs text-stone-500">{p.city}</p>
                   </td>
                   <td className="px-4 py-3 tabular-nums">
                     W{p.waist} L{p.length}

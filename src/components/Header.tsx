@@ -9,7 +9,7 @@ export function Header() {
           <span className="text-lg font-semibold tracking-tight text-indigo-950 sm:text-xl">
             Indigo Lane
           </span>
-          <span className="hidden text-xs uppercase tracking-[0.2em] text-stone-500 sm:inline">
+          <span className="hidden text-sm text-stone-500 sm:inline">
             Second-hand denim
           </span>
         </Link>

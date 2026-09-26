@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/lib/types";
+import { productAlt } from "@/components/ProductCard";
 import { gbp } from "@/lib/format";
 
 export function PairAndPerk({
@@ -36,16 +38,11 @@ export function PairAndPerk({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-200/90">
-            New Ways to Buy
-          </p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-            Pair &amp; Perk
-          </h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Pair &amp; Perk</h2>
           <p className="mt-2 max-w-xl text-sm text-indigo-100/90">
-            Pay full price for this pair → unlock one complementary denim piece{" "}
-            <strong className="text-amber-100">free</strong>. Sharp bundle
-            mechanic for Fleek — no coupons, no fake discount codes.
+            Pay full price for this pair and unlock one complementary denim
+            piece <strong className="text-amber-100">free</strong>. Sharp
+            bundle mechanic for Fleek. No coupons, no fake discount codes.
           </p>
         </div>
         <div className="rounded-xl bg-white/10 px-3 py-2 text-right text-sm backdrop-blur">
@@ -73,26 +70,33 @@ export function PairAndPerk({
                 key={p.id}
                 type="button"
                 onClick={() => setPerkId(p.id)}
-                className={`rounded-xl border p-3 text-left transition ${
+                className={`flex gap-3 rounded-xl border p-3 text-left transition ${
                   active
                     ? "border-amber-300 bg-white/15 ring-2 ring-amber-300/60"
                     : "border-white/10 bg-white/5 hover:bg-white/10"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs uppercase tracking-wider text-indigo-200">
-                    Free perk
-                  </p>
-                  <span className="text-xs line-through opacity-70">
-                    {gbp(p.price)}
+                <Image
+                  src={p.image}
+                  alt={productAlt(p)}
+                  width={72}
+                  height={90}
+                  className="h-[4.5rem] w-14 shrink-0 rounded-lg object-cover"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="text-sm text-indigo-200">Free perk</span>
+                    <span className="text-xs line-through opacity-70">
+                      {gbp(p.price)}
+                    </span>
                   </span>
-                </div>
-                <p className="mt-1 font-medium">
-                  {p.brand} {p.name}
-                </p>
-                <p className="text-xs text-indigo-200">
-                  W{p.waist} L{p.length} · {p.condition} · {p.wash}
-                </p>
+                  <span className="mt-1 block font-medium">
+                    {p.brand} {p.name}
+                  </span>
+                  <span className="block text-xs text-indigo-200">
+                    W{p.waist} L{p.length} · {p.condition} · {p.wash}
+                  </span>
+                </span>
               </button>
             );
           })}
