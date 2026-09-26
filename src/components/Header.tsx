@@ -26,8 +26,16 @@ export function Header() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
         <Link
           href="/"
-          className="font-slab text-xl font-bold text-rinse"
+          className="flex items-center gap-2 font-slab text-xl font-bold text-rinse"
         >
+          <img
+            src="/haggleberry-mark.svg"
+            alt=""
+            width={39}
+            height={32}
+            className="h-8 w-auto shrink-0"
+            aria-hidden
+          />
           Haggleberry
         </Link>
 
