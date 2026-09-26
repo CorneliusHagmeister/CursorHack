@@ -75,7 +75,7 @@ export type Decision =
   | { type: "accept_counter"; offer: Offer } // buyer's price + terms work, deal done
   | { type: "conditional"; offer: Offer } // "that price works if you give us X"
   | { type: "quote"; offer: Offer } // price for the terms the buyer proposed
-  | { type: "counter"; offer: Offer; final: boolean } // too low: our counter (with terms + extras); final = at walk-away
+  | { type: "counter"; offer: Offer; final: boolean; held: boolean } // too low: our counter; final = at walk-away, held = buyer didn't move so neither did we
   | { type: "info" }; // no price action, just conversation
 
 export type Priority = "hold" | "normal" | "clear";

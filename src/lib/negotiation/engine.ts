@@ -180,18 +180,41 @@ export function dealValue(ctx: PricingContext, offer: Offer): number {
   return Math.max(0, ctx.product.price - offer.price) + (offer.perk?.listPrice ?? 0) + extras;
 }
 
-/** Standing deals: the pair at list, and the Pair & Perk bundle (+ extras) at list */
-function standingOffers(ctx: PricingContext, perk: Product | null): Offer[] {
-  const extras = availableExtras(ctx);
+/** Pushes on price before the free pair goes on the table, and before extras join it */
+const PERK_AFTER_PRESSURE = 1;
+const EXTRAS_AFTER_PRESSURE = 3;
+
+/**
+ * Standing deals. We don't open with gifts: the pair starts at list on its own.
+ * Once the buyer has pushed on price, the Pair & Perk bundle (full price, free
+ * pair) appears as the alternative to a discount; value-adds only join it
+ * under sustained pressure. `askedForPerk` puts the bundle up when requested.
+ */
+function standingOffers(
+  ctx: PricingContext,
+  perk: Product | null,
+  pressure: number,
+  askedForPerk = false
+): Offer[] {
+  const extras = pressure >= EXTRAS_AFTER_PRESSURE ? availableExtras(ctx) : [];
   const offers = [makeOffer(ctx, [], null, [], ctx.product.price)];
-  if (perk) offers.push(makeOffer(ctx, [], perk, extras, ctx.product.price));
-  else if (extras.length) offers.push(makeOffer(ctx, [], null, extras, ctx.product.price));
+  if (perk && (askedForPerk || pressure >= PERK_AFTER_PRESSURE)) {
+    offers.push(makeOffer(ctx, [], perk, extras, ctx.product.price));
+  } else if (!perk && extras.length) {
+    offers.push(makeOffer(ctx, [], null, extras, ctx.product.price));
+  }
   return offers;
 }
 
-function tableWith(ctx: PricingContext, perk: Product | null, extra: Offer[] = []): Offer[] {
+function tableWith(
+  ctx: PricingContext,
+  perk: Product | null,
+  pressure: number,
+  extra: Offer[] = [],
+  askedForPerk = false
+): Offer[] {
   const seen = new Set<string>();
-  return [...extra, ...standingOffers(ctx, perk)].filter(
+  return [...extra, ...standingOffers(ctx, perk, pressure, askedForPerk)].filter(
     (o) => !seen.has(o.offerId) && seen.add(o.offerId)
   );
 }
@@ -262,7 +285,7 @@ export function openingTerms(
   ctx: PricingContext,
   perkId?: string
 ): Pick<Negotiation, "round" | "offers" | "pressure"> {
-  return { round: 0, pressure: 0, offers: standingOffers(ctx, pickPerk(ctx, perkId)) };
+  return { round: 0, pressure: 0, offers: standingOffers(ctx, pickPerk(ctx, perkId), 0, Boolean(perkId)) };
 }
 
 export function applyBuyerTurn(
@@ -289,9 +312,7 @@ export function applyBuyerTurn(
   const currentPerkId =
     turn.perkId ?? (previousPerkId && allowedPerks.includes(previousPerkId) ? previousPerkId : undefined);
   const perk = pickPerk(ctx, currentPerkId);
-  if (turn.includePerk && !perk) {
-    throw new NegotiationError(400, "No Pair & Perk options exist for this product.");
-  }
+  // Asking for a free pair the merchant hasn't allowed is just conversation, not an error
   const dealPerk = turn.includePerk ? perk : null;
   const dealExtras = turn.includePerk ? availableExtras(ctx) : [];
   const buyerTerms = sortTerms(turn.offerTerms ?? []);
@@ -318,10 +339,12 @@ export function applyBuyerTurn(
     offers: [offer],
     agreed: { ...offer, agreedAt: now },
   });
+  // Keep the bundle up once it has been offered or asked for
+  const perkShown = Boolean(turn.includePerk || turn.perkId || neg.offers.some((o) => o.perk));
   const onTable = (extra: Offer[], nextPressure = pressure): Negotiation => ({
     ...base,
     pressure: nextPressure,
-    offers: tableWith(ctx, perk, extra),
+    offers: tableWith(ctx, perk, nextPressure, extra, perkShown),
   });
 
   // 1. Buyer accepts one of the deals on the table
@@ -355,32 +378,29 @@ export function applyBuyerTurn(
       return { next: onTable([offer]), decision: { type: "conditional", offer } };
     }
 
-    // Too low: propose a deal instead of just a number. Move our position one
-    // (shrinking) step, ask for the least that reaches it, and lead with value.
-    const nextPressure = Math.min(MAX_PRESSURE, pressure + 1);
+    // Too low: propose a deal instead of just a number. We only give ground when
+    // the buyer does: a first counter, or one higher than their last, moves our
+    // position one (shrinking) step; repeating or lowering it gets the same deal.
+    const lastCounter = [...neg.transcript].reverse().find((t) => t.role === "buyer" && t.counterOffer != null)
+      ?.counterOffer;
+    const buyerMoved = lastCounter == null || counter > lastCounter;
+    const nextPressure = buyerMoved ? Math.min(MAX_PRESSURE, pressure + 1) : pressure;
     const position = positionAt(ctx, nextPressure);
     const allTerms = availableTerms(ctx).map((t) => t.id);
     const cashTerms =
       termsToReach(ctx, buyerTerms, position, null, [], nextPressure) ??
       sortTerms([...buyerTerms, ...allTerms]);
     const cash = makeOffer(ctx, cashTerms, null, [], priceFor(ctx, cashTerms, null, [], nextPressure));
-    // The bundle only asks for commitments that actually lower its price;
-    // if the free pair + extras already use up the room, it stays at list with none
-    const extras = availableExtras(ctx);
-    let bundle: Offer | null = null;
-    if (perk && ctx.policy.priority !== "hold") {
-      const best = priceFor(ctx, sortTerms([...buyerTerms, ...allTerms]), perk, extras, nextPressure);
-      const bundleTerms =
-        best < ctx.product.price
-          ? (termsToReach(ctx, buyerTerms, best, perk, extras, nextPressure) ?? buyerTerms)
-          : buyerTerms;
-      bundle = makeOffer(ctx, bundleTerms, perk, extras, priceFor(ctx, bundleTerms, perk, extras, nextPressure));
-    }
-    // Lead with the richer deal when it exists; the price-only version sits next to it
-    const lead = bundle ?? cash;
+    // Answer a price with a price deal. The full-price bundle (free pair, never
+    // also discounted) stands beside it as the alternative, not the lead.
     return {
-      next: onTable(bundle ? [bundle, cash] : [cash], nextPressure),
-      decision: { type: "counter", offer: lead, final: position === positionAt(ctx, MAX_PRESSURE) },
+      next: onTable([cash], nextPressure),
+      decision: {
+        type: "counter",
+        offer: cash,
+        final: position === positionAt(ctx, MAX_PRESSURE),
+        held: !buyerMoved,
+      },
     };
   }
 
@@ -396,7 +416,13 @@ export function applyBuyerTurn(
     return { next: onTable([offer]), decision: { type: "quote", offer } };
   }
 
-  // 4. Conversation only (a perk switch may still change the standing deals)
+  // 4. Buyer asks for the bundle without a price: it's the full-price deal
+  if (turn.includePerk && dealPerk && neg.status === "open") {
+    const offer = standingOffers(ctx, dealPerk, pressure, true).find((o) => o.perk)!;
+    return { next: onTable([offer]), decision: { type: "quote", offer } };
+  }
+
+  // 5. Conversation only (a perk switch may still change the standing deals)
   return {
     next:
       neg.status === "open"

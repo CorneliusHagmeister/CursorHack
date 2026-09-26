@@ -41,7 +41,7 @@ Quick path: open `/login` → **Continue as demo shopper** → product → Make 
 
 1. Open `/` as a generic shop (no Sam strip).
 2. Sign in as demo shopper, or open `/product/apc-petit-new?utm_campaign=raw-denim` after login.
-3. Make an offer. Finn opens on W31 vs W30 and £5 over the £90 budget, then leads with the Pair & Perk deal.
+3. Make an offer. Finn opens on W31 vs W30 and £5 over the £90 budget at list price. Free pairs and extras are earned: the Pair & Perk bundle only appears once you push on price (or ask for it), and Finn only gives ground when your offer goes up.
 4. Knock £10 off → Finn answers with a deal, not a discount (e.g. £88 for final sale, or the full bundle at list). "We'll take the deal" → Apply → Confirm → Merchant. Watch it live on `/merchant/live`.
 
 ## Agent path (v1 + MCP)

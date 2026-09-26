@@ -77,9 +77,10 @@ export function defaultPolicy(product: Product): ProductPolicy {
     extras: {
       free_hemming: { enabled: true, cost: 4, value: 12 },
     },
-    perkEnabled: true,
-    perkIds: null,
-    // Push the cheapest eligible pairs first: they cost us least to give away
+    // Free pairs are a merchant decision, not a default: off until switched on
+    // per item, and then limited to cheap overstock we'd happily give away
+    perkEnabled: false,
+    perkIds: eligible.filter((p) => p.price <= 20).map((p) => p.id),
     pushPerkIds: eligible.filter((p) => p.price <= 20).map((p) => p.id),
     sellingPoints: "",
     avoidSaying: "",
