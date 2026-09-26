@@ -1,31 +1,31 @@
-# IDE handoff — Indigo Lane
+# IDE handoff, Indigo Lane
 
-**Continue in Cursor IDE from here. Do not rewrite the app from scratch.**
+Continue in Cursor from here. Do not rewrite the app from scratch.
 
 | | |
-|---|---|
-| **Path** | `~/dev/CursorHack` (`/Users/manglekuo/dev/CursorHack`) |
-| **Branch** | `dev` (track `origin/dev`) |
-| **Remote** | `https://github.com/CorneliusHagmeister/CursorHack.git` |
-| **Freeze** | 16:30 London |
+| --- | --- |
+| Path | `~/dev/CursorHack` |
+| Branch | `dev` (track `origin/dev`) |
+| Remote | `https://github.com/CorneliusHagmeister/CursorHack.git` |
+| Freeze | 16:30 London |
 
-## Shipped (on disk / pushing)
+## Already on disk
 
-- Next.js storefront + merchant, 12 seeded UK jeans, Pair & Perk static flow
-- **Returning shopper** Sam Okonkwo (`src/lib/shopper.ts`) + header/home/product context UI
-- **Live NegotiatePanel** + `/api/negotiate` + checkout/orders accept negotiated price/summary
-- Fit assist FAB (rule-based)
-- README (may lag — prefer CONTEXT.md spine)
+- Next.js storefront and merchant, 12 seeded UK jeans, static Pair & Perk
+- Returning shopper Sam Okonkwo in `src/lib/shopper.ts`, plus header, home, and product context
+- Live NegotiatePanel, `/api/negotiate`, checkout and orders that accept a negotiated price
+- Fit assist button, rule-based
+- README. If it drifts, trust CONTEXT.md
 
-## In-flight / finish before freeze
+## Before freeze
 
-**Done in follow-up commit:** merchant + order confirm show negotiation summary/discount; README demo script tightened; `npm run build` passes.
+Merchant and order confirm already show the negotiation summary and discount. `npm run build` should pass.
 
-Optional polish before 16:30: stage-rehearse the click-path once; tweak negotiate copy if judges want sharper counters.
+Optional: rehearse the click path once. Tighten negotiate copy if a counter sounds vague.
 
-## Demo click-path (memorise)
+## Demo click path
 
-`/` → show Sam banner → `/product/apc-petit-new#negotiate` → Start → “Too pricey — knock £10 off” → Apply deal → checkout Confirm → Merchant.
+`/`, Sam strip and abandoned £95 cart, `/product/apc-petit-new#negotiate`, Start, "Knock £10 off", Apply deal, checkout Confirm, Merchant.
 
 ## npm
 
@@ -34,9 +34,9 @@ npm run dev
 npm run build
 ```
 
-## What not to rewrite
+## Leave these alone
 
-- Don’t replace catalogue seed, Pair & Perk mechanic, or file/memory store with a new stack.
-- Don’t invent API keys / real LLM calls for the stage demo.
-- Don’t clone elsewhere; stay on `dev`.
-- Don’t remove ShopperContext / NegotiatePanel — they are the Fleek “past context + live interaction” proof.
+- Do not replace the catalogue seed, the Pair & Perk mechanic, or the file/memory store.
+- Do not invent API keys or a real LLM call for the stage demo.
+- Do not clone elsewhere. Stay on `dev`.
+- Do not remove ShopperContext or NegotiatePanel. They are the proof that the shop has a past and a live deal.

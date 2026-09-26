@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShopperContextBanner } from "@/components/ShopperContext";
+import { ShopperStrip } from "@/components/ShopperStrip";
 
 export function Header() {
   return (
@@ -31,11 +31,7 @@ export function Header() {
           </span>
         </nav>
       </div>
-      <div className="border-t border-stone-200/60 bg-emerald-50/50">
-        <div className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
-          <ShopperContextBanner compact />
-        </div>
-      </div>
+      <ShopperStrip />
     </header>
   );
 }

@@ -49,8 +49,8 @@ export default async function MerchantPage() {
         <h2 className="text-xl font-semibold text-indigo-950">Incoming orders</h2>
         {orders.length === 0 ? (
           <p className="mt-4 rounded-2xl border border-dashed border-stone-300 bg-white/50 px-5 py-8 text-center text-sm text-stone-500">
-            No orders yet. Demo path: home (Sam context) → product → live
-            negotiate → checkout → land here.
+            No orders yet. Demo path: home, product, live negotiate, checkout,
+            then land here.
           </p>
         ) : (
           <div className="mt-4 space-y-4">
@@ -106,8 +106,8 @@ export default async function MerchantPage() {
                     {(order.discount ?? 0) > 0 && (
                       <span>
                         {" "}
-                        · list {gbp(order.listPrice ?? order.total)} → paid{" "}
-                        {gbp(order.total)} (−{gbp(order.discount)})
+                        List {gbp(order.listPrice ?? order.total)}, paid{" "}
+                        {gbp(order.total)} (off {gbp(order.discount)})
                       </span>
                     )}
                   </p>

@@ -19,6 +19,9 @@ export function ShopperContextBanner({ compact = false }: { compact?: boolean })
         <span className="hidden rounded-full bg-white/80 px-2 py-1 text-stone-600 md:inline">
           budget {gbp(s.budgetMax)}
         </span>
+        <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-950">
+          Abandoned A.P.C. cart, £95
+        </span>
       </div>
     );
   }

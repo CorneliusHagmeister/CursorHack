@@ -18,12 +18,8 @@ export default async function ProductPage({
   if (!product) notFound();
   const perkOptions = getPerkOptions(id);
   const shopper = getShopper();
-  const brandMatch = shopper.preferredBrands.some(
-    (b) =>
-      product.brand.toLowerCase().includes(b.toLowerCase().replace(" jeans", "")) ||
-      b.toLowerCase().includes(product.brand.toLowerCase())
-  );
   const waistDelta = Math.abs(product.waist - shopper.waist);
+  const overBudget = product.price - shopper.budgetMax;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -33,14 +29,6 @@ export default async function ProductPage({
         </Link>{" "}
         / {product.brand}
       </p>
-
-      <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-950">
-        <strong>{shopper.name.split(" ")[0]}&apos;s context:</strong> W
-        {shopper.waist} vs listed W{product.waist}
-        {waistDelta === 0 ? " (exact)" : ` (Δ${waistDelta})`}
-        {brandMatch ? " · preferred brand match" : ""} · budget{" "}
-        {gbp(shopper.budgetMax)} · floor {shopper.minCondition}
-      </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-stone-200 shadow-inner">
@@ -65,6 +53,16 @@ export default async function ProductPage({
           <p className="mt-3 text-3xl font-semibold tabular-nums text-indigo-950">
             {gbp(product.price)}
           </p>
+          {waistDelta !== 0 && (
+            <p className="mt-3 text-base text-indigo-950">
+              You usually wear W{shopper.waist}. This is W{product.waist}.
+            </p>
+          )}
+          {overBudget > 0 && (
+            <p className="mt-1 text-base text-indigo-950">
+              {gbp(overBudget)} over your {gbp(shopper.budgetMax)} ceiling.
+            </p>
+          )}
 
           <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
             {[

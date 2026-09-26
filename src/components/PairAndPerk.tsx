@@ -41,8 +41,7 @@ export function PairAndPerk({
           <h2 className="text-2xl font-semibold tracking-tight">Pair &amp; Perk</h2>
           <p className="mt-2 max-w-xl text-sm text-indigo-100/90">
             Pay full price for this pair and unlock one complementary denim
-            piece <strong className="text-amber-100">free</strong>. Sharp
-            bundle mechanic for Fleek. No coupons, no fake discount codes.
+            piece <strong className="text-amber-100">free</strong>.
           </p>
         </div>
         <div className="rounded-xl bg-white/10 px-3 py-2 text-right text-sm backdrop-blur">

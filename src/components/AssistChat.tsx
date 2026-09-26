@@ -24,7 +24,7 @@ export function AssistChat() {
     {
       role: "assistant",
       content:
-        "Hi — I'm the Indigo Lane fit desk. Tell me your waist + preferred condition (e.g. \"W32 excellent\") and I'll match the catalogue. On a product page I also suggest Pair & Perk free add-ons.\n\nRemembered shopper: Sam · W31 · APC/Nudie.\n\n📋 Demo: prefer product Negotiate panel; or ask \"W31 very good\" → open a match → New Ways to Buy → claim a perk → checkout → check Merchant.",
+        "Hi, I'm the Indigo Lane fit desk. Tell me a waist and a condition, like \"W32 excellent\", and I'll match the catalogue. On a product page I also suggest a free Pair & Perk add-on.\n\nRemembered shopper: Sam, W31, APC and Nudie.\n\nFor the demo, use Negotiate on the product page. Or ask \"W31 very good\", open a match, claim a perk, check out, then look at Merchant.",
     },
   ]);
   const [matches, setMatches] = useState<Product[]>([]);
@@ -50,7 +50,7 @@ export function AssistChat() {
     } catch {
       setMessages((m) => [
         ...m,
-        { role: "assistant", content: "Something went wrong — try again." },
+        { role: "assistant", content: "Something went wrong. Try again." },
       ]);
     } finally {
       setBusy(false);

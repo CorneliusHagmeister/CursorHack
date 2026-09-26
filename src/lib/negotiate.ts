@@ -2,7 +2,6 @@ import { getPerkOptions, getProduct } from "./products";
 import { getShopper } from "./shopper";
 import type {
   NegotiatedDeal,
-  NegotiateMessage,
   NegotiateRequest,
   NegotiateResponse,
   Product,
@@ -23,7 +22,6 @@ function pickPerk(primary: Product, preferBrand?: string): Product | null {
     );
     if (hit) return hit;
   }
-  // Prefer perk near shopper waist and under budget leftover vibe
   return byWaist[0] ?? null;
 }
 
@@ -66,7 +64,15 @@ function intent(msg: string) {
 }
 
 function parseTargetPrice(msg: string, list: number): number | null {
-  const m = msg.match(/£\s*(\d{2,3})|\b(\d{2,3})\s*(?:quid|pounds?)?/);
+  const off = msg.match(
+    /(?:knock|take|cut|drop)\s*£?\s*(\d{1,3})\s*off|\b(\d{1,3})\s*off\b/i
+  );
+  if (off) {
+    const discount = Number(off[1] || off[2]);
+    const next = list - discount;
+    if (discount > 0 && next >= 10 && next < list) return next;
+  }
+  const m = msg.match(/£\s*(\d{2,3})(?!\s*off)|\b(\d{2,3})\s*(?:quid|pounds?)\b/);
   if (!m) return null;
   const n = Number(m[1] || m[2]);
   if (n >= 10 && n < list) return n;
@@ -78,7 +84,7 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
   const primary = getProduct(req.productId);
   if (!primary) {
     return {
-      steps: ["I can't find that pair — pick another from the catalogue."],
+      steps: ["I can't find that pair. Pick another from the catalogue."],
       deal: {
         primaryId: req.productId,
         perkId: null,
@@ -99,7 +105,6 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
     req.deal ??
     baseDeal(primary, pickPerk(primary));
 
-  // Opening turn (no user message yet) — personal context dump for judges
   if (isFirst || (!req.message.trim() && history.length === 0)) {
     const past = shopper.pastPurchases[0];
     const brandFit = shopper.preferredBrands.some((b) =>
@@ -107,25 +112,22 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
       b.toLowerCase().includes(primary.brand.toLowerCase())
     );
     const waistDelta = Math.abs(primary.waist - shopper.waist);
+    const overBudget = primary.price - shopper.budgetMax;
     const steps = [
-      `Welcome back, ${shopper.name.split(" ")[0]} — returning shopper · visit #${shopper.returningVisits}.`,
-      `I remember you: W${shopper.waist} L${shopper.length}, brands ${shopper.preferredBrands.join(" / ")}, condition ≥ ${shopper.minCondition}, budget ~${gbp(shopper.budgetMax)}.`,
-      past
-        ? `Last win: ${past.brand} ${past.name} (${past.purchasedAt.slice(0, 7)}) — "${past.note}".`
-        : `You've got history with us.`,
-      `${shopper.lastSeenNote}`,
       waistDelta === 0
-        ? `This ${primary.brand} is true to your W${shopper.waist}${brandFit ? " and matches your preferred brands" : ""}.`
-        : `Waist listed W${primary.waist} vs your W${shopper.waist} — ${waistDelta <= 1 ? "close enough for your usual taper" : "worth a fit check"}.`,
-      deal.perkId
-        ? `Opening Pair & Perk: pay ${gbp(deal.negotiatedPrice)} for the ${primary.brand} → unlock ${deal.perkLabel}. Want to negotiate?`
-        : `Listed at ${gbp(primary.price)}. Tell me what would make this a yes.`,
+        ? `You usually wear W${shopper.waist}. This ${primary.brand} is the same waist${brandFit ? ", and it's a brand you already buy" : ""}.`
+        : `You usually wear W${shopper.waist}. This ${primary.brand} is W${primary.waist}. A free perk can soften that risk.`,
+      overBudget > 0
+        ? `${gbp(primary.price)} is ${gbp(overBudget)} over your ${gbp(shopper.budgetMax)} ceiling.`
+        : past
+          ? `Last time you bought ${past.brand} ${past.name}. ${shopper.lastSeenNote}`
+          : shopper.lastSeenNote,
     ];
     return {
       steps,
       deal,
       quickReplies: [
-        "Too pricey — knock £10 off",
+        overBudget > 0 ? "Knock £10 off" : "Too pricey, knock £10 off",
         "Better free perk?",
         "Lock Pair & Perk",
       ],
@@ -136,7 +138,7 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
   const msg = req.message.trim();
   const i = intent(msg);
   const steps: string[] = [];
-  let quickReplies = ["Too pricey", "Better perk", "Accept deal → checkout"];
+  let quickReplies = ["Too pricey", "Better perk", "Accept deal to checkout"];
   let canApply = Boolean(deal.perkId);
 
   if (i.accept) {
@@ -144,7 +146,7 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
       `Locked. ${deal.summary}.`,
       deal.concessions.length
         ? `Concessions on record: ${deal.concessions.join("; ")}.`
-        : `Straight Pair & Perk — no further discounts.`,
+        : `Straight Pair & Perk. No further discounts.`,
       `I'll apply this into checkout with your saved profile (${shopper.name}, ${shopper.city}).`
     );
     canApply = true;
@@ -162,10 +164,9 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
     let next = asked ?? Math.min(shopper.budgetMax, primary.price - 8);
     if (next < floor) {
       steps.push(
-        `I can't go to ${gbp(next)} — floor for this ${primary.condition} ${primary.brand} is around ${gbp(floor)}.`
+        `I can't go to ${gbp(next)}. Floor for this ${primary.condition} ${primary.brand} is around ${gbp(floor)}.`
       );
       next = floor;
-      // Sweetener: upgrade perk instead
       const perk = pickPerk(primary) ?? getProduct(deal.perkId ?? "");
       const alt = getPerkOptions(primary.id).find((p) => p.id !== deal.perkId);
       if (alt && (!perk || alt.price > (perk?.price ?? 0))) {
@@ -176,7 +177,7 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
           negotiatedPrice: next,
           concessions: [
             ...deal.concessions,
-            `price → ${gbp(next)}`,
+            `price to ${gbp(next)}`,
             `perk upgraded to ${alt.brand}`,
           ],
           summary: `Negotiated Pair & Perk: ${primary.brand} at ${gbp(next)} (was ${gbp(primary.price)}) + free ${alt.brand}`,
@@ -188,45 +189,56 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
         deal = {
           ...deal,
           negotiatedPrice: next,
-          concessions: [...deal.concessions, `price → ${gbp(next)}`],
+          concessions: [...deal.concessions, `price to ${gbp(next)}`],
           summary: `Negotiated: ${primary.brand} at ${gbp(next)} (was ${gbp(primary.price)})${deal.perkLabel ? ` + ${deal.perkLabel}` : ""}`,
         };
         steps.push(`Best I can do: ${gbp(next)} with your current perk.`);
       }
     } else {
-      // Within range — maybe meet halfway
       const mid = Math.round((primary.price + next) / 2);
       const offer = Math.max(floor, Math.min(next + 3, mid));
       const finalPrice = asked && asked >= floor ? asked : offer;
       deal = {
         ...deal,
         negotiatedPrice: finalPrice,
-        concessions: [...deal.concessions, `price ${gbp(primary.price)} → ${gbp(finalPrice)}`],
+        concessions: [...deal.concessions, `price ${gbp(primary.price)} to ${gbp(finalPrice)}`],
         summary: `Negotiated Pair & Perk: ${primary.brand} at ${gbp(finalPrice)} (was ${gbp(primary.price)})${deal.perkLabel ? ` + ${deal.perkLabel}` : ""}`,
       };
+      const perkName = deal.perkLabel?.replace(" (free)", "");
+      const insideBudget =
+        primary.price > shopper.budgetMax && finalPrice <= shopper.budgetMax;
       steps.push(
-        `Noted — you're under budget ${gbp(shopper.budgetMax)} and bounced at £95 before.`,
-        `Counter-offer: ${gbp(finalPrice)} for the ${primary.brand}${deal.perkLabel ? `, still including free ${deal.perkLabel.replace(" (free)", "")}` : ""}.`
+        insideBudget
+          ? `${gbp(finalPrice)} lands inside your ${gbp(shopper.budgetMax)} ceiling. You were ${gbp(primary.price - shopper.budgetMax)} over at ${gbp(primary.price)}.`
+          : `Counter-offer: ${gbp(finalPrice)} for the ${primary.brand}${perkName ? `, still including free ${perkName}` : ""}.`
+      );
+      if (perkName && insideBudget) {
+        steps.push(`Free ${perkName} stays on the deal.`);
+      }
+    }
+    if (Math.abs(primary.waist - shopper.waist) === 0) {
+      steps.push("Accept, or push on the perk?");
+    } else {
+      steps.push(
+        `This is still W${primary.waist} against your usual W${shopper.waist}. Accept, or swap the perk?`
       );
     }
-    steps.push(`Your W${shopper.waist} profile still fits. Accept, or push on the perk?`);
     canApply = true;
-    quickReplies = ["Accept deal → checkout", "Better perk instead", "One more pound off"];
+    quickReplies = ["Accept deal to checkout", "Better perk instead", "One more pound off"];
     return { steps, deal, quickReplies, canApply };
   }
 
   if (i.betterPerk) {
     const current = deal.perkId ? getProduct(deal.perkId) : null;
     const opts = getPerkOptions(primary.id).filter((p) => p.id !== deal.perkId);
-    // Prefer higher-value perk still under primary price
     const better = [...opts].sort((a, b) => b.price - a.price)[0];
     if (!better) {
       steps.push(
         current
           ? `You're already on the best perk match for W~${shopper.waist}: ${current.brand} ${current.name}.`
-          : `No perk pool left for this waist — I can still discount the primary.`
+          : `No perk pool left for this waist. I can still discount the primary.`
       );
-      quickReplies = ["Knock £8 off instead", "Accept deal → checkout"];
+      quickReplies = ["Knock £8 off instead", "Accept deal to checkout"];
       return { steps, deal, quickReplies, canApply: true };
     }
     deal = {
@@ -235,16 +247,16 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
       perkLabel: `${better.brand} ${better.name} (free)`,
       concessions: [
         ...deal.concessions,
-        `perk → ${better.brand} ${better.name} (was ${current ? current.brand : "none"})`,
+        `perk to ${better.brand} ${better.name} (was ${current ? current.brand : "none"})`,
       ],
       summary: `Negotiated Pair & Perk: ${primary.brand} at ${gbp(deal.negotiatedPrice)} + free ${better.brand}`,
     };
     steps.push(
-      `Swapping perk. You liked organic / everyday pieces before — ${better.brand} ${better.name} is ${better.condition}, W${better.waist}, normally ${gbp(better.price)}.`,
-      `New deal: pay ${gbp(deal.negotiatedPrice)} → get ${better.brand} free.`
+      `Swapping perk. You liked organic and everyday pieces before. ${better.brand} ${better.name} is ${better.condition}, W${better.waist}, normally ${gbp(better.price)}.`,
+      `New deal: pay ${gbp(deal.negotiatedPrice)} and get ${better.brand} free.`
     );
     canApply = true;
-    quickReplies = ["Accept deal → checkout", "Still too much", "Tell me about fit"];
+    quickReplies = ["Accept deal to checkout", "Still too much", "Tell me about fit"];
     return { steps, deal, quickReplies, canApply };
   }
 
@@ -252,17 +264,17 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
     const waistDelta = Math.abs(primary.waist - shopper.waist);
     steps.push(
       `Fit desk pull from your history: you wear W${shopper.waist} L${shopper.length}; this is W${primary.waist} L${primary.length} (${waistDelta === 0 ? "exact waist" : `Δ${waistDelta}`}).`,
-      `Condition ${primary.condition} vs your floor ${shopper.minCondition} — ${primary.condition === "Fair" ? "below your bar; I'd want a bigger perk or price cut" : "clears your bar"}.`,
+      `Condition ${primary.condition} vs your floor ${shopper.minCondition}. ${primary.condition === "Fair" ? "Below your bar. I'd want a bigger perk or a price cut." : "Clears your bar."}`,
       primary.condition === "Fair" || primary.condition === "Good"
-        ? `Trade-off: keep price, upgrade perk — or take ${gbp(Math.max(primary.price - 10, shopper.budgetMax - 5))} with current perk.`
-        : `Honest wear note: ${primary.description.slice(0, 120)}…`
+        ? `Keep the price and upgrade the perk, or take ${gbp(Math.max(primary.price - 10, shopper.budgetMax - 5))} with the current perk.`
+        : `Wear note: ${primary.description.slice(0, 120)}`
     );
     if (primary.condition === "Fair" || primary.condition === "Good") {
       const discounted = Math.max(primary.price - 10, Math.min(shopper.budgetMax, primary.price - 5));
       deal = {
         ...deal,
         negotiatedPrice: discounted,
-        concessions: [...deal.concessions, `condition trade-off → ${gbp(discounted)}`],
+        concessions: [...deal.concessions, `condition trade-off to ${gbp(discounted)}`],
         summary: `Condition trade: ${primary.brand} at ${gbp(discounted)}${deal.perkLabel ? ` + ${deal.perkLabel}` : ""}`,
       };
     }
@@ -271,23 +283,18 @@ export function runNegotiate(req: NegotiateRequest): NegotiateResponse {
     return { steps, deal, quickReplies, canApply };
   }
 
-  // Default / open negotiate
   steps.push(
     `Using your profile (${shopper.preferredBrands.slice(0, 2).join(", ")}, W${shopper.waist}, budget ${gbp(shopper.budgetMax)}).`,
     deal.perkId
       ? `On the table: ${deal.summary}.`
       : `On the table: ${gbp(deal.negotiatedPrice)} for ${primary.brand}.`,
-    `Push on price, swap the free perk, or ask about condition — your call.`
+    `Push on price, swap the free perk, or ask about condition. Your call.`
   );
   canApply = Boolean(deal.perkId);
   quickReplies = [
-    "Too pricey — knock £10 off",
+    "Too pricey, knock £10 off",
     "Better free perk?",
     "Lock Pair & Perk",
   ];
   return { steps, deal, quickReplies, canApply };
-}
-
-export function openingPrompt(_productId: string): NegotiateMessage[] {
-  return [];
 }

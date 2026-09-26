@@ -126,7 +126,7 @@ export function NegotiatePanel({ primary }: { primary: Product }) {
           </button>
         ) : (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-200">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 motion-reduce:animate-none" />
             Live
           </span>
         )}
@@ -140,9 +140,7 @@ export function NegotiatePanel({ primary }: { primary: Product }) {
           >
             {!started && (
               <p className="rounded-xl border border-dashed border-stone-300 bg-white/70 px-3 py-4 text-center text-sm text-stone-500">
-                Press <strong>Start live negotiation</strong> — the desk greets
-                Sam with remembered W31 / APC·Nudie context, then you counter
-                on stage.
+                Press Start live negotiation.
               </p>
             )}
             {bubbles.map((b) => (
@@ -241,13 +239,13 @@ export function NegotiatePanel({ primary }: { primary: Product }) {
               </div>
               {deal.perkLabel && (
                 <p className="rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
-                  🎁 {deal.perkLabel}
+                  {deal.perkLabel}
                 </p>
               )}
               {deal.concessions.length > 0 && (
                 <ul className="space-y-1 text-xs text-stone-600">
                   {deal.concessions.map((c) => (
-                    <li key={c}>↔ {c}</li>
+                    <li key={c}>{c}</li>
                   ))}
                 </ul>
               )}
@@ -257,7 +255,7 @@ export function NegotiatePanel({ primary }: { primary: Product }) {
                 onClick={applyDeal}
                 className="mt-2 w-full rounded-full bg-indigo-950 py-2.5 text-sm font-semibold text-amber-50 hover:bg-indigo-900 disabled:opacity-40"
               >
-                Apply deal → checkout
+                Apply deal to checkout
               </button>
             </div>
           ) : (
@@ -266,8 +264,8 @@ export function NegotiatePanel({ primary }: { primary: Product }) {
             </p>
           )}
           <p className="mt-4 text-[11px] leading-relaxed text-stone-500">
-            Demo script: Start → “Too pricey — knock £10 off” → optional “Better
-            free perk?” → Accept / Apply deal → checkout as Sam → Merchant.
+            Demo: Start, then &quot;Knock £10 off&quot;, then apply the deal.
+            Check out as Sam and open Merchant.
           </p>
         </aside>
       </div>

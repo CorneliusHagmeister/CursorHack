@@ -1,8 +1,6 @@
 import type { Product } from "./types";
 
-/** Seed catalogue — UK second-hand denim, believable GBP prices.
- *  Photos live in public/products/{id}.jpg (Unsplash stock). Replace the file to use a generated shot.
- */
+/** Seed catalogue. Photos live in public/products/{id}.jpg. */
 export const PRODUCTS: Product[] = [
   {
     id: "levi-501-indigo",
@@ -51,7 +49,7 @@ export const PRODUCTS: Product[] = [
     cut: "Slim taper",
     condition: "Very Good",
     description:
-      "Organic dry black Lean Deans. One owner, no fades yet — blank canvas for your own wear pattern.",
+      "Organic dry black Lean Deans. One owner, no fades yet. Blank canvas for your own wear pattern.",
     city: "Bristol",
     perkEligible: false,
     accent: "#111827",
@@ -87,7 +85,7 @@ export const PRODUCTS: Product[] = [
     cut: "Slim",
     condition: "Like New",
     description:
-      "Barely worn 872s — crisp rinse, factory crease still visible. Compact waist, short inseam.",
+      "Barely worn 872s. Crisp rinse, factory crease still visible. Compact waist, short inseam.",
     city: "Brighton",
     perkEligible: true,
     accent: "#2563eb",
@@ -105,7 +103,7 @@ export const PRODUCTS: Product[] = [
     cut: "Wide",
     condition: "Good",
     description:
-      "Easy weekend wide-legs. Soft cotton denim, light fade on the seat — perfect perk pair.",
+      "Easy weekend wide-legs. Soft cotton denim, light fade on the seat. A solid perk pair.",
     city: "Birmingham",
     perkEligible: true,
     accent: "#7dd3fc",
@@ -141,7 +139,7 @@ export const PRODUCTS: Product[] = [
     cut: "Slim straight",
     condition: "Excellent",
     description:
-      "Paris raw denim, UK seller. Unwashed, stiff hand — the hero pair for a Pair & Perk unlock.",
+      "Paris raw denim, UK seller. Unwashed, stiff hand.",
     city: "London",
     perkEligible: false,
     accent: "#0f172a",
@@ -177,7 +175,7 @@ export const PRODUCTS: Product[] = [
     cut: "Straight",
     condition: "Good",
     description:
-      "Lee heritage riders with a clean rinse. Longer inseam — works with trainers or boots.",
+      "Lee heritage riders with a clean rinse. Longer inseam, works with trainers or boots.",
     city: "Liverpool",
     perkEligible: false,
     accent: "#1e40af",

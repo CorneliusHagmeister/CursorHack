@@ -1,6 +1,5 @@
 import type { ShopperProfile } from "./types";
 
-/** Seeded returning shopper — judges should see this context immediately */
 export const RETURNING_SHOPPER: ShopperProfile = {
   id: "shopper_sam_okonkwo",
   name: "Sam Okonkwo",
@@ -21,7 +20,7 @@ export const RETURNING_SHOPPER: ShopperProfile = {
       condition: "Very Good",
       price: 52,
       purchasedAt: "2026-03-14",
-      note: "Loved the taper — asked for same waist next time",
+      note: "Loved the taper. Asked for the same waist next time",
     },
     {
       brand: "A.P.C.",
@@ -30,7 +29,7 @@ export const RETURNING_SHOPPER: ShopperProfile = {
       condition: "Good",
       price: 78,
       purchasedAt: "2025-11-02",
-      note: "Sized up wish — now locks W31",
+      note: "Wanted a size up. Now locks W31",
     },
     {
       brand: "Weekday",
@@ -39,7 +38,7 @@ export const RETURNING_SHOPPER: ShopperProfile = {
       condition: "Good",
       price: 28,
       purchasedAt: "2025-08-19",
-      note: "Weekend beater — liked the organic hand-feel",
+      note: "Weekend beater. Liked the organic hand-feel",
     },
   ],
   returningVisits: 7,

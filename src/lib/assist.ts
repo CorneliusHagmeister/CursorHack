@@ -27,14 +27,13 @@ function scoreProduct(
     if (CONDITION_RANK[p.condition] >= CONDITION_RANK[minCondition]) score += 20;
     else score -= 10;
   }
-  // Prefer hero (non-perk) for primary recommendations
   if (!p.perkEligible) score += 5;
   score += Math.min(p.price / 5, 15);
   return score;
 }
 
 function formatProduct(p: Product): string {
-  return `**${p.brand} ${p.name}** — W${p.waist} L${p.length}, ${p.condition}, ${p.wash}, £${p.price} (${p.city})`;
+  return `${p.brand} ${p.name}, W${p.waist} L${p.length}, ${p.condition}, ${p.wash}, £${p.price} (${p.city})`;
 }
 
 export function runAssist(req: AssistRequest): {
@@ -71,23 +70,23 @@ export function runAssist(req: AssistRequest): {
       const reply = [
         `For **${primary.brand} ${primary.name}** (W${primary.waist}), here's a size/condition read:`,
         ``,
-        `• Listed condition: **${primary.condition}** — ${primary.description}`,
+        `Listed condition ${primary.condition}. ${primary.description}`,
         waist != null
-          ? `• Your waist **${waist}** vs listed **${primary.waist}**: ${
+          ? `Your waist ${waist} vs listed ${primary.waist}. ${
               Math.abs(waist - primary.waist) <= 1
-                ? "close match — expect true-to-size."
+                ? "Close match. Expect true to size."
                 : Math.abs(waist - primary.waist) <= 2
-                  ? "slight gap — check cut (relaxed vs slim)."
-                  : "notable gap — I'd pick another waist."
+                  ? "Slight gap. Check the cut, relaxed or slim."
+                  : "Notable gap. I'd pick another waist."
             }`
-          : `• Tell me your waist and I’ll tighten the fit advice.`,
+          : `Tell me your waist and I'll tighten the fit advice.`,
         ``,
         perks.length
           ? `**Pair & Perk** unlocks (free add-ons if you pay full price on this pair):\n` +
             perks.map((p) => `• ${formatProduct(p)}`).join("\n")
-          : `No free perk options currently match this waist — browse other hero pairs.`,
+          : `No free perk options match this waist. Browse other hero pairs.`,
         ``,
-        `_Demo tip: ask “W32 excellent black” or “what pairs with this?”_`,
+        `Demo tip: ask "W32 excellent black" or "what pairs with this?"`,
       ].join("\n");
       return { reply, matches: perks };
     }
@@ -118,7 +117,7 @@ export function runAssist(req: AssistRequest): {
         ]
           .filter(Boolean)
           .join(", ")}:`
-      : `Here are strong picks from today’s Indigo Lane catalogue:`;
+      : `Strong picks from today's Indigo Lane catalogue:`;
 
   const reply = [
     intro,
@@ -126,10 +125,8 @@ export function runAssist(req: AssistRequest): {
     ...unique.map((p, i) => `${i + 1}. ${formatProduct(p)}`),
     ``,
     wantsPerk
-      ? `**Pair & Perk:** pay full price on a hero pair → claim one complementary perk pair free at checkout.`
-      : `Want a free complementary pair? Ask about **Pair & Perk**, or open a product and use New Ways to Buy.`,
-    ``,
-    `_Size/condition assist is rule-based for this demo (no external API keys)._`,
+      ? `Pair & Perk: pay full price on a hero pair, then claim one complementary perk pair free at checkout.`
+      : `Want a free complementary pair? Ask about Pair & Perk, or open a product and use New Ways to Buy.`,
   ].join("\n");
 
   return { reply, matches: unique };

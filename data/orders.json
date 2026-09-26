@@ -1,1 +1,35 @@
-[]
+[
+  {
+    "id": "ord_stage_seed",
+    "createdAt": "2026-09-20T11:00:00.000Z",
+    "buyerName": "Sam Okonkwo",
+    "buyerEmail": "sam.okonkwo@example.com",
+    "shippingCity": "London",
+    "items": [
+      {
+        "productId": "nudie-lean-dean",
+        "name": "Lean Dean Organic",
+        "brand": "Nudie Jeans",
+        "price": 55,
+        "role": "primary"
+      },
+      {
+        "productId": "dickies-872",
+        "name": "872 Slim Fit Work Pant",
+        "brand": "Dickies",
+        "price": 0,
+        "role": "perk"
+      }
+    ],
+    "subtotal": 55,
+    "perkSavings": 28,
+    "total": 55,
+    "listPrice": 55,
+    "discount": 0,
+    "mechanic": "negotiated-pair-and-perk",
+    "status": "shipped",
+    "note": "Earlier visit, already fulfilled.",
+    "negotiationSummary": "Nudie Lean Dean at £55 with a free Dickies perk.",
+    "shopperId": "shopper_sam_okonkwo"
+  }
+]

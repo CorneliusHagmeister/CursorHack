@@ -83,7 +83,7 @@ export default async function OrderPage({
         <div className="mt-6 space-y-1 border-t border-stone-200 pt-4 text-sm">
           {(order.discount ?? 0) > 0 && (
             <div className="flex justify-between text-indigo-700">
-              <span>List {gbp(order.listPrice ?? order.total)} → negotiated</span>
+              <span>List {gbp(order.listPrice ?? order.total)}, negotiated</span>
               <span>−{gbp(order.discount)}</span>
             </div>
           )}
