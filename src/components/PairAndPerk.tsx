@@ -9,9 +9,11 @@ import { gbp, productAlt } from "@/lib/format";
 export function PairAndPerk({
   primary,
   perkOptions,
+  shopperWaist,
 }: {
   primary: Product;
   perkOptions: Product[];
+  shopperWaist?: number;
 }) {
   const router = useRouter();
   const [perkId, setPerkId] = useState<string | null>(
@@ -95,6 +97,9 @@ export function PairAndPerk({
                   </span>
                   <span className="block text-xs text-indigo-200">
                     W{p.waist} L{p.length} · {p.condition} · {p.wash}
+                    {shopperWaist != null && p.waist !== shopperWaist
+                      ? ` · you wear W${shopperWaist}`
+                      : ""}
                   </span>
                 </span>
               </button>

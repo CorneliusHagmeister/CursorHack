@@ -15,6 +15,18 @@ pnpm run dev
 pnpm run build
 ```
 
+## Demo login (required for judges)
+
+Safe shared demo account — use these on `/login` or over the agent APIs. No secrets.
+
+| | |
+| --- | --- |
+| Email | `sam.okonkwo@example.com` |
+| Password | `indigo-demo` |
+| Agent bearer token | `il_demo_agent_token` |
+
+Quick path: open `/login` → **Continue as demo shopper** → product → Make an offer.
+
 ## Shopper context
 
 | Source | How | What they get |
@@ -23,6 +35,7 @@ pnpm run build
 | Ad | `/?utm_campaign=raw-denim` then open a product | Campaign intent in the opener. No PII. |
 | Login | `/login` → Continue as demo shopper | Sam's W31, £90 ceiling, abandoned A.P.C. |
 | Agent | `Authorization: Bearer il_demo_agent_token` | Same as login over REST or MCP |
+| One-time code | Account → Copy a note for your agent. Agent opens `/login` and enters the code. Nothing is active until that note is copied. | Size, budget, and past buys. Password stays with the shopper. The code works once. |
 
 ## Stage path
 
@@ -60,6 +73,7 @@ Agents haggle with the merchant on a shopper's behalf. **Prices are decided dete
 
 | Method | Path | operationId |
 |---|---|---|
+| POST | `/api/auth/session-code/redeem` `{code}` | `redeemSessionCode` |
 | GET | `/api/products` | `listProducts` |
 | POST | `/api/negotiations` `{productId, buyerName?, perkId?}` | `startNegotiation` |
 | GET | `/api/negotiations/{id}` | `getNegotiation` |
@@ -87,9 +101,3 @@ supabase db query --linked -f supabase/seed.sql
 ```
 
 Copy `.env.example` into `.env.local` with the project URL and publishable key. Without env, the app keeps using the seed catalogue and file store.
-
-## Demo credentials
-
-- Email: `sam.okonkwo@example.com`
-- Password: `indigo-demo`
-- Agent token: `il_demo_agent_token`

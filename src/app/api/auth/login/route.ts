@@ -5,23 +5,48 @@ import {
   DEMO_SHOPPER_PASSWORD,
   RETURNING_SHOPPER,
 } from "@/lib/shopper";
+import { takeSessionCode } from "@/lib/session-codes";
 import { createServerSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/server";
+
+const setDemoCookie = async () => {
+  const cookieStore = await cookies();
+  cookieStore.set(DEMO_SHOPPER_COOKIE, "1", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+};
 
 export async function POST(req: Request) {
   const body = (await req.json()) as {
     email?: string;
     password?: string;
     demo?: boolean;
+    code?: string;
   };
 
-  if (body.demo) {
-    const cookieStore = await cookies();
-    cookieStore.set(DEMO_SHOPPER_COOKIE, "1", {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+  if (typeof body.code === "string" && body.code.trim()) {
+    const shopper = takeSessionCode(body.code);
+    if (!shopper || shopper.id !== RETURNING_SHOPPER.id) {
+      return NextResponse.json(
+        {
+          error: "That code has expired or was already used.",
+          hint: "Ask the shopper to copy a new note from Account. Do not ask for their password.",
+        },
+        { status: 401 }
+      );
+    }
+    await setDemoCookie();
+    return NextResponse.json({
+      ok: true,
+      mode: "code",
+      shopper: { name: shopper.name, email: shopper.email },
     });
+  }
+
+  if (body.demo) {
+    await setDemoCookie();
     return NextResponse.json({
       ok: true,
       mode: "demo",
@@ -53,13 +78,7 @@ export async function POST(req: Request) {
     body.email === RETURNING_SHOPPER.email &&
     body.password === DEMO_SHOPPER_PASSWORD
   ) {
-    const cookieStore = await cookies();
-    cookieStore.set(DEMO_SHOPPER_COOKIE, "1", {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    await setDemoCookie();
     return NextResponse.json({ ok: true, mode: "demo" });
   }
 

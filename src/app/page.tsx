@@ -1,8 +1,11 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { ProductCard } from "@/components/ProductCard";
 import { CatalogueFilters } from "@/components/CatalogueFilters";
 import { HomeHero } from "@/components/HomeHero";
 import { searchProducts } from "@/lib/products";
+import { resolveShopperContext, hasPersonalContext } from "@/lib/context";
+import { gbp } from "@/lib/format";
 import type { Condition, ProductFilters } from "@/lib/types";
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
@@ -26,21 +29,30 @@ export default async function HomePage({
   };
 
   const products = searchProducts(filters);
-  // The pitch only greets a fresh visit; searches and filters go straight to results
-  const browsing = Object.values(filters).some((v) => v !== undefined);
+  const ctx = await resolveShopperContext({ searchParams: sp });
+  const shopper = hasPersonalContext(ctx) ? ctx.shopper : undefined;
+  const firstName = shopper?.name.split(" ")[0];
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      {!browsing && <HomeHero />}
-
-      <div id="shop" className={`mb-6 scroll-mt-24 ${browsing ? "" : "pt-12"}`}>
-        {browsing ? (
-          <h1 className="font-slab text-3xl font-bold text-rinse">In the shop</h1>
-        ) : (
-          <h2 className="font-slab text-3xl font-bold text-rinse">In the shop</h2>
-        )}
-        <p className="mt-1 text-sm text-stone-500">
-          {products.length} {products.length === 1 ? "item" : "items"}, all open to offers
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">
+          Second-hand denim
+        </h1>
+        <p className="mt-1 text-sm text-stone-600">
+          {shopper && firstName ? (
+            <>
+              {firstName} wears W{shopper.waist} and shops up to {gbp(shopper.budgetMax)}.{" "}
+              <Link
+                href={`/?waist=${shopper.waist}&max_price=${shopper.budgetMax}`}
+                className="underline"
+              >
+                Show my size
+              </Link>
+              {" · "}
+            </>
+          ) : null}
+          {products.length} pairs · UK sellers
         </p>
       </div>
 

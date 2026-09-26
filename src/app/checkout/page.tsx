@@ -1,11 +1,15 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { gbp, productAlt } from "@/lib/format";
 import { PRODUCTS } from "@/lib/products";
+import { gbp, productAlt } from "@/lib/format";
+import { returnPolicyForCity } from "@/lib/return-policies";
+
+const formatList = (items: string[]) =>
+  new Intl.ListFormat("en-GB", { style: "long", type: "conjunction" }).format(items);
 
 function CheckoutForm() {
   const params = useSearchParams();
@@ -38,19 +42,26 @@ function CheckoutForm() {
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((data) => {
+        setSignedIn(Boolean(data.signedIn));
         if (!data.signedIn) return;
-        // Prefill only when signed in
         setBuyerName((n) => n || data.name || "");
         setBuyerEmail((e) => e || data.email || "");
-        setShippingCity((c) => c || "London");
+        setShippingCity((c) => c || data.city || "");
       })
-      .catch(() => undefined);
+      .catch(() => setSignedIn(false));
   }, []);
+
+  const missingFields = [
+    !buyerName.trim() && "name",
+    !buyerEmail.trim() && "email",
+    !shippingCity.trim() && "city",
+  ].filter((field): field is string => Boolean(field));
 
   if (!primary) {
     return (
@@ -63,7 +74,9 @@ function CheckoutForm() {
     );
   }
 
-  async function placeOrder() {
+  const handlePlaceOrder = async (e: FormEvent) => {
+    e.preventDefault();
+    if (missingFields.length > 0) return;
     setBusy(true);
     setError(null);
     try {
@@ -87,14 +100,20 @@ function CheckoutForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Order failed");
       router.push(`/order/${data.order.id}`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Order failed");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Order failed");
       setBusy(false);
     }
-  }
+  };
 
   const perkSavings = perk?.price ?? 0;
   const discount = Math.max(0, listPrice - payPrice);
+  const returnPolicy = returnPolicyForCity(shippingCity);
+  const confirmLabel = negotiated
+    ? `Confirm deal · ${gbp(payPrice)}`
+    : perk
+      ? `Place order · ${gbp(payPrice)} + free pair`
+      : `Place order · ${gbp(payPrice)}`;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -105,55 +124,71 @@ function CheckoutForm() {
           <p className="text-sm font-medium text-indigo-950">Deal from live negotiation</p>
           <p className="mt-1 font-medium">{summary}</p>
           {concessions && (
-            <p className="mt-1 text-xs text-indigo-800">↔ {concessions}</p>
+            <p className="mt-1 text-xs text-indigo-800">{concessions}</p>
           )}
         </div>
       )}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-5">
+      <form
+        onSubmit={handlePlaceOrder}
+        className="mt-8 grid gap-6 lg:grid-cols-5"
+      >
         <div className="space-y-4 lg:col-span-3">
-          {buyerName ? (
-            <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
-              Prefill from signed-in profile · {buyerName}
-              {buyerEmail ? ` · ${buyerEmail}` : ""}
-            </p>
-          ) : (
-            <p className="rounded-lg bg-stone-100 px-3 py-2 text-xs text-stone-600">
-              Guest checkout.{" "}
-              <Link href="/login" className="underline">
-                Sign in
-              </Link>{" "}
-              to prefill.
-            </p>
-          )}
-          <label className="block text-sm">
-            <span className="text-stone-600">Name</span>
+          <p className="min-h-5 text-sm text-stone-600">
+            {signedIn === true &&
+              "Filled in from your account. Change anything before you pay."}
+            {signedIn === false && (
+              <>
+                Checking out as a guest.{" "}
+                <Link href="/login" className="underline">
+                  Sign in
+                </Link>{" "}
+                to fill this in.
+              </>
+            )}
+          </p>
+          <label className="block text-sm" htmlFor="buyer-name">
+            Name
             <input
+              id="buyer-name"
+              name="name"
+              autoComplete="name"
+              required
               className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
               value={buyerName}
               onChange={(e) => setBuyerName(e.target.value)}
             />
           </label>
-          <label className="block text-sm">
-            <span className="text-stone-600">Email</span>
+          <label className="block text-sm" htmlFor="buyer-email">
+            Email
             <input
+              id="buyer-email"
+              name="email"
               type="email"
+              autoComplete="email"
+              required
               className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
               value={buyerEmail}
               onChange={(e) => setBuyerEmail(e.target.value)}
             />
           </label>
-          <label className="block text-sm">
-            <span className="text-stone-600">Shipping city</span>
+          <label className="block text-sm" htmlFor="shipping-city">
+            City to ship to
             <input
+              id="shipping-city"
+              name="city"
+              autoComplete="address-level2"
+              required
               className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
               value={shippingCity}
               onChange={(e) => setShippingCity(e.target.value)}
             />
           </label>
-          <label className="block text-sm">
-            <span className="text-stone-600">Note</span>
+          <label className="block text-sm" htmlFor="order-note">
+            Note for the seller
             <input
+              id="order-note"
+              name="note"
               className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -237,23 +272,27 @@ function CheckoutForm() {
               <span className="tabular-nums">{gbp(payPrice)}</span>
             </div>
           </div>
+          <p className="mt-3 text-xs text-stone-500">{returnPolicy.detail}</p>
 
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
           <button
-            type="button"
-            disabled={busy || !buyerName || !buyerEmail || !shippingCity}
-            onClick={() => void placeOrder()}
+            type="submit"
+            disabled={busy || missingFields.length > 0}
+            aria-describedby={
+              signedIn !== null && missingFields.length > 0 ? "checkout-missing" : undefined
+            }
             className="mt-5 w-full rounded-full bg-indigo-950 py-2.5 text-sm font-semibold text-amber-50 hover:bg-indigo-900 disabled:opacity-50"
           >
-            {busy
-              ? "Placing order…"
-              : negotiated
-                ? "Confirm negotiated order"
-                : "Confirm Pair & Perk order"}
+            {busy ? "Placing order…" : confirmLabel}
           </button>
+          {signedIn !== null && missingFields.length > 0 && (
+            <p id="checkout-missing" className="mt-2 text-center text-xs text-stone-500">
+              Add your {formatList(missingFields)} to place the order.
+            </p>
+          )}
         </div>
-      </div>
+      </form>
     </div>
   );
 }
