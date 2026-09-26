@@ -1,6 +1,8 @@
-{
-  "project_id": "indigo-lane",
-  "db": {
-    "major_version": 15
-  }
-}
+# A string used to distinguish different Supabase projects on the same host.
+project_id = "indigo-lane"
+
+[api]
+enabled = true
+
+[db]
+major_version = 15
