@@ -6,7 +6,7 @@ import { StatementCard } from "@/components/StatementCard";
 
 const agentNote = (code: string, origin: string) =>
   [
-    "Shop on Indigo Lane for me.",
+    "Shop on Haggleberry for me.",
     "",
     `Open ${origin}/login`,
     `Sign in with this one-time code: ${code}`,
