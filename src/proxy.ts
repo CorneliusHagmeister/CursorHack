@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { merchantGate } from "@/lib/merchant-auth";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -18,6 +19,10 @@ export async function proxy(request: NextRequest) {
     res.headers.set("Vary", "Accept");
     return res;
   }
+
+  // Merchant pages and APIs need a merchant session
+  const gate = merchantGate(request);
+  if (gate) return gate;
 
   let response = NextResponse.next({ request });
 

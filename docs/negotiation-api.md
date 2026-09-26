@@ -112,6 +112,8 @@ The host must be public (deployment or tunnel). ChatGPT can't reach localhost.
 
 ## Merchant dashboard
 
+Merchant pages (`/merchant/*`) and APIs (`/api/merchant/*`, `GET /api/orders`, `PATCH /api/orders/{id}`) need a merchant session: sign in at `/merchant/login` with `MERCHANT_PASSWORD` (demo default `indigo-merchant`). The session is an HMAC-signed cookie checked in `src/proxy.ts`. The public agent API (`/api/negotiations`) and shopper checkout stay open.
+
 - **`/merchant/live`** shows agent negotiations as they happen. With Supabase configured, every message is a row in `il_agent_negotiation_messages` and the page updates over Realtime; otherwise it polls every 2s. **Run simulated buyer** starts a scripted "ChatGPT agent" that haggles through the real API (a few seconds per turn) and buys.
 - **Pricing policy per product** (floor, which terms are on offer and their £ value, allowed Pair & Perk pairs, selling points for the voice) lives in `il_negotiation_policies` (service role only, since it holds floors), or `data/policies.json` without Supabase. APIs: `GET /api/merchant/policies`, `PUT`/`DELETE /api/merchant/policies/{productId}`, `POST /api/merchant/simulate` (try an unsaved policy). The editor page is next.
 - Migrations: `supabase/migrations/20260926140000_il_negotiation_policies.sql`, `20260926141000_il_agent_negotiations.sql`.

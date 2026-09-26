@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const LINKS = [
   { href: "/merchant", label: "Orders" },
@@ -10,8 +10,17 @@ const LINKS = [
 
 export function MerchantNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  if (pathname === "/merchant/login") return null;
+
+  async function signOut() {
+    await fetch("/api/merchant/auth", { method: "DELETE" });
+    router.replace("/merchant/login");
+    router.refresh();
+  }
+
   return (
-    <nav aria-label="Merchant" className="mx-auto flex max-w-6xl gap-1 px-4 pt-6 text-sm sm:px-6">
+    <nav aria-label="Merchant" className="mx-auto flex max-w-6xl items-center gap-1 px-4 pt-6 text-sm sm:px-6">
       {LINKS.map((l) => {
         const active = pathname === l.href;
         return (
@@ -27,6 +36,13 @@ export function MerchantNav() {
           </Link>
         );
       })}
+      <button
+        type="button"
+        onClick={() => void signOut()}
+        className="ml-auto rounded-full px-3 py-1.5 text-stone-500 hover:bg-stone-100"
+      >
+        Sign out
+      </button>
     </nav>
   );
 }
