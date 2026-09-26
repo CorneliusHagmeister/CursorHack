@@ -2,7 +2,7 @@
 
 An HTTP API that lets an AI assistant (ChatGPT, Claude, …) haggle with Haggleberry on a shopper's behalf, then buy at the agreed price.
 
-This is separate from the on-site deal desk (`/api/negotiate` + `NegotiatePanel`). Neither touches the other.
+The on-site deal desk, `/api/v1/negotiations`, the MCP tools and this API all run on the same engine ([`compat.ts`](../src/lib/negotiation/compat.ts) keeps the older connector shapes). The denim catalogue is the demo shop; the same API sits in front of any catalogue the engine is pointed at.
 
 ## How it works
 

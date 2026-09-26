@@ -1,7 +1,8 @@
 # Haggleberry hackathon context
 
 Event: Grok Bot Commerce x Fleek London.
-Product: two-sided second-hand jeans marketplace.
+Product: a negotiation layer (Finn) that any shop can switch on, e.g. via a Shopify app. The second-hand denim store is the demo storefront.
+Tagline: the negotiator Mark Twain would've been proud of.
 Repo branch: `feature/generic-shop-agents-il1` (merge into `dev`).
 
 ## What judges need to see
