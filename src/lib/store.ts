@@ -35,6 +35,7 @@ function stageOrder(): Order {
     note: "Earlier visit, already fulfilled.",
     negotiationSummary: "Nudie Lean Dean at £55 with a free Dickies perk.",
     shopperId: "shopper_sam_okonkwo",
+    channel: "web",
   };
 }
 

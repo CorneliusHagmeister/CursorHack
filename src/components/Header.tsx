@@ -1,37 +1,77 @@
+"use client";
+
 import Link from "next/link";
-import { ShopperStrip } from "@/components/ShopperStrip";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useState } from "react";
+import { Search } from "lucide-react";
+import { AuthMenu } from "@/components/AuthMenu";
+
+const CUTS = ["Straight", "Slim", "Relaxed", "Wide"] as const;
 
 export function Header() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [q, setQ] = useState(searchParams.get("q") ?? "");
+
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams(searchParams.toString());
+    if (q.trim()) params.set("q", q.trim());
+    else params.delete("q");
+    router.push(`/?${params.toString()}`);
+  };
+
   return (
-    <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#f7f3ec]/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Link href="/" className="group flex items-baseline gap-2">
-          <span className="text-lg font-semibold tracking-tight text-indigo-950 sm:text-xl">
-            Indigo Lane
-          </span>
-          <span className="hidden text-sm text-stone-500 sm:inline">
-            Second-hand denim
-          </span>
+    <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+        <Link
+          href="/"
+          className="text-lg font-semibold tracking-tight text-stone-900"
+        >
+          Indigo Lane
         </Link>
-        <nav className="flex items-center gap-1 text-sm sm:gap-3">
+
+        <form
+          onSubmit={handleSearch}
+          className="order-3 flex w-full flex-1 items-center gap-2 rounded-full border border-stone-200 bg-stone-50 px-3 py-2 sm:order-none sm:max-w-md"
+          role="search"
+        >
+          <Search className="h-4 w-4 shrink-0 text-stone-400" aria-hidden />
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search brand, wash, city"
+            aria-label="Search the catalogue"
+            className="w-full bg-transparent text-sm outline-none placeholder:text-stone-400"
+          />
+        </form>
+
+        <nav className="ml-auto flex items-center gap-1 text-sm sm:gap-2">
           <Link
-            href="/"
-            className="rounded-full px-3 py-1.5 text-stone-700 hover:bg-white/70"
+            href="/?cut=Straight"
+            className="hidden rounded-full px-2.5 py-1.5 text-stone-600 hover:bg-stone-100 md:inline"
           >
-            Shop
+            Straight
           </Link>
+          {CUTS.slice(1).map((cut) => (
+            <Link
+              key={cut}
+              href={`/?cut=${encodeURIComponent(cut)}`}
+              className="hidden rounded-full px-2.5 py-1.5 text-stone-600 hover:bg-stone-100 lg:inline"
+            >
+              {cut}
+            </Link>
+          ))}
           <Link
             href="/merchant"
-            className="rounded-full px-3 py-1.5 text-stone-700 hover:bg-white/70"
+            className="rounded-full px-2.5 py-1.5 text-stone-600 hover:bg-stone-100"
           >
-            Merchant
+            Sell
           </Link>
-          <span className="hidden rounded-full bg-indigo-950 px-3 py-1.5 text-xs font-medium text-amber-50 sm:inline">
-            Pair &amp; Perk
-          </span>
+          <AuthMenu />
         </nav>
       </div>
-      <ShopperStrip />
     </header>
   );
 }

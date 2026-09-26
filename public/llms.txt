@@ -1,0 +1,35 @@
+# Indigo Lane
+
+Second-hand denim marketplace for humans and agents.
+
+## Shop
+
+- Home: `/` — anonymous catalogue with filters. No personalisation.
+- Product: `/product/{id}` — Buy now, Make an offer, Bundle.
+- Sign in: `/login` — unlocks fit and budget on the product page.
+- Merchant: `/merchant` — operator desk.
+
+## Agent interfaces
+
+- REST OpenAPI: `/openapi.json`
+- REST base: `/api/v1`
+  - `GET /api/v1/products`
+  - `GET /api/v1/products/{id}`
+  - `POST /api/v1/negotiations`
+  - `POST /api/v1/negotiations/{id}/messages`
+  - `POST /api/v1/orders`
+  - `GET /api/v1/orders/{id}`
+- MCP: `/api/mcp` and `/mcp/{transport}`
+- Markdown: send `Accept: text/markdown` to `/` or `/product/{id}`
+
+## Auth
+
+- Browser: demo shopper cookie via `/login`
+- Agent: `Authorization: Bearer <token>` from `/account`, or stage token `il_demo_agent_token`
+
+## Context sources
+
+1. Anonymous — price and perk only
+2. Ad — `?utm_campaign=raw-denim` (intent, no PII)
+3. Login — Sam's fit, budget, history
+4. Agent — same as login via bearer token

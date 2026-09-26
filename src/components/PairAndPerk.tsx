@@ -38,7 +38,9 @@ export function PairAndPerk({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Pair &amp; Perk</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Bundle: get a second pair free
+          </h2>
           <p className="mt-2 max-w-xl text-sm text-indigo-100/90">
             Pay full price for this pair and unlock one complementary denim
             piece <strong className="text-amber-100">free</strong>.

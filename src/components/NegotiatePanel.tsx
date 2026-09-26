@@ -114,7 +114,7 @@ export function NegotiatePanel({ primary }: { primary: Product }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 bg-gradient-to-r from-indigo-950 to-slate-900 px-4 py-3 text-amber-50 sm:px-5">
         <div>
-          <h2 className="text-lg font-semibold">Deal desk for {primary.brand}</h2>
+          <h2 className="text-lg font-semibold">Make an offer · {primary.brand}</h2>
         </div>
         {!started ? (
           <button
@@ -122,7 +122,7 @@ export function NegotiatePanel({ primary }: { primary: Product }) {
             onClick={() => void start()}
             className="rounded-full bg-amber-300 px-4 py-2 text-sm font-semibold text-indigo-950 hover:bg-amber-200"
           >
-            Start live negotiation
+            Start offer
           </button>
         ) : (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-200">
@@ -140,7 +140,7 @@ export function NegotiatePanel({ primary }: { primary: Product }) {
           >
             {!started && (
               <p className="rounded-xl border border-dashed border-stone-300 bg-white/70 px-3 py-4 text-center text-sm text-stone-500">
-                Press Start live negotiation.
+                Press Start offer.
               </p>
             )}
             {bubbles.map((b) => (

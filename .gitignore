@@ -30,7 +30,8 @@
 /out/
 next-env.d.ts
 npm-debug.log*
-pnpm-lock.yaml
 pnpm-workspace.yaml
 yarn-debug.log*
 yarn-error.log*
+/data/agent-tokens.json
+supabase/.temp/

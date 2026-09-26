@@ -73,6 +73,11 @@ export default async function MerchantPage() {
                     <p className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-amber-900">
                       {order.mechanic}
                     </p>
+                    {order.channel && (
+                      <p className="mt-1 text-xs text-stone-500">
+                        via {order.channel}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-semibold tabular-nums text-indigo-950">
