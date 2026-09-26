@@ -7,11 +7,11 @@ import {
   applyBuyerTurn,
   availableTerms,
   openingTerms,
-  requireProduct,
   termLabels,
 } from "./engine";
+import { getPricingContext } from "./policies";
 import { SESSION_TTL_SECONDS, getNegotiation, saveNegotiation } from "./sessions";
-import type { BuyerTurn, Negotiation } from "./types";
+import type { BuyerTurn, Negotiation, PricingContext } from "./types";
 import { merchantReply } from "./voice";
 
 function guidance(neg: Negotiation): string {
@@ -30,8 +30,12 @@ function guidance(neg: Negotiation): string {
 }
 
 /** The shape agents see — no floor prices or internal counters */
-export function publicView(neg: Negotiation, opts: { transcript?: boolean } = {}) {
-  const product = requireProduct(neg.productId);
+export function publicView(
+  neg: Negotiation,
+  ctx: PricingContext,
+  opts: { transcript?: boolean } = {}
+) {
+  const { product } = ctx;
   return {
     negotiationId: neg.id,
     status: neg.status,
@@ -46,7 +50,7 @@ export function publicView(neg: Negotiation, opts: { transcript?: boolean } = {}
       condition: product.condition,
     },
     round: neg.round,
-    availableTerms: availableTerms(product),
+    availableTerms: availableTerms(ctx),
     offers: neg.status === "open" ? neg.offers : [],
     agreedDeal: neg.agreed,
     orderId: neg.orderId,
@@ -62,20 +66,43 @@ async function load(id: string): Promise<Negotiation> {
   return neg;
 }
 
+async function pricing(productId: string): Promise<PricingContext> {
+  const ctx = await getPricingContext(productId);
+  if (!ctx) throw new NegotiationError(404, `Unknown productId "${productId}"`);
+  return ctx;
+}
+
 export async function startNegotiation(input: {
   productId: string;
   buyerName?: string;
   perkId?: string;
 }) {
-  const product = requireProduct(input.productId);
+  const ctx = await pricing(input.productId);
+  let neg = newNegotiation(ctx, input);
   const now = new Date();
-  let neg: Negotiation = {
+  const reply = await merchantReply(neg, { type: "opening" }, ctx);
+  neg = {
+    ...neg,
+    transcript: [{ role: "merchant", text: reply.text, at: now.toISOString() }],
+  };
+  await saveNegotiation(neg, { newEntries: 1, decision: "opening" });
+  return { merchantReply: reply.text, replySource: reply.source, ...publicView(neg, ctx) };
+}
+
+/** A fresh, unsaved negotiation (also used by the merchant simulator) */
+export function newNegotiation(
+  ctx: PricingContext,
+  input: { buyerName?: string; perkId?: string } = {}
+): Negotiation {
+  const { product } = ctx;
+  const now = new Date();
+  return {
     id: `neg_${randomUUID().replace(/-/g, "")}`,
     productId: product.id,
     listPrice: product.price,
     buyerName: input.buyerName,
     status: "open",
-    ...openingTerms(product, input.perkId),
+    ...openingTerms(ctx, input.perkId),
     agreed: null,
     orderId: null,
     transcript: [],
@@ -83,20 +110,13 @@ export async function startNegotiation(input: {
     updatedAt: now.toISOString(),
     expiresAt: new Date(now.getTime() + SESSION_TTL_SECONDS * 1000).toISOString(),
   };
-  const reply = await merchantReply(neg, { type: "opening" }, product);
-  neg = {
-    ...neg,
-    transcript: [{ role: "merchant", text: reply.text, at: now.toISOString() }],
-  };
-  await saveNegotiation(neg);
-  return { merchantReply: reply.text, replySource: reply.source, ...publicView(neg) };
 }
 
 export async function sendMessage(id: string, turn: BuyerTurn) {
   const current = await load(id);
-  const product = requireProduct(current.productId);
-  const { next, decision } = applyBuyerTurn(current, turn);
-  const reply = await merchantReply(next, decision, product, turn.message, turn.counterOffer);
+  const ctx = await pricing(current.productId);
+  const { next, decision } = applyBuyerTurn(current, turn, ctx);
+  const reply = await merchantReply(next, decision, ctx, turn.message, turn.counterOffer);
   const neg: Negotiation = {
     ...next,
     transcript: [
@@ -104,17 +124,18 @@ export async function sendMessage(id: string, turn: BuyerTurn) {
       { role: "merchant", text: reply.text, at: new Date().toISOString() },
     ],
   };
-  await saveNegotiation(neg);
+  await saveNegotiation(neg, { newEntries: 2, decision: decision.type });
   return {
     merchantReply: reply.text,
     replySource: reply.source,
     decision: decision.type,
-    ...publicView(neg),
+    ...publicView(neg, ctx),
   };
 }
 
 export async function fetchNegotiation(id: string) {
-  return publicView(await load(id), { transcript: true });
+  const neg = await load(id);
+  return publicView(neg, await pricing(neg.productId), { transcript: true });
 }
 
 export async function purchaseDeal(
@@ -145,7 +166,8 @@ export async function purchaseDeal(
     );
   }
 
-  const product = requireProduct(neg.productId);
+  const ctx = await pricing(neg.productId);
+  const { product } = ctx;
   const items: OrderItem[] = [
     {
       productId: product.id,
@@ -166,7 +188,7 @@ export async function purchaseDeal(
     });
   }
   const perkSavings = perk?.price ?? 0;
-  const terms = termLabels(product, deal.terms);
+  const terms = termLabels(deal.terms);
   const termsNote = terms.length ? `Buyer agreed: ${terms.join("; ")}` : "";
 
   const order = await createOrder({
@@ -193,5 +215,5 @@ export async function purchaseDeal(
     updatedAt: new Date().toISOString(),
   };
   await saveNegotiation(done);
-  return { order, negotiation: publicView(done) };
+  return { order, negotiation: publicView(done, ctx) };
 }

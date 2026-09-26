@@ -110,6 +110,12 @@ This creates a normal order (`negotiated-pair-and-perk`, with list price, discou
 
 The host must be public (deployment or tunnel). ChatGPT can't reach localhost.
 
+## Merchant dashboard
+
+- **`/merchant/live`** shows agent negotiations as they happen. With Supabase configured, every message is a row in `il_agent_negotiation_messages` and the page updates over Realtime; otherwise it polls every 2s. **Run simulated buyer** starts a scripted "ChatGPT agent" that haggles through the real API (a few seconds per turn) and buys.
+- **Pricing policy per product** (floor, which terms are on offer and their £ value, allowed Pair & Perk pairs, selling points for the voice) lives in `il_negotiation_policies` (service role only, since it holds floors), or `data/policies.json` without Supabase. APIs: `GET /api/merchant/policies`, `PUT`/`DELETE /api/merchant/policies/{productId}`, `POST /api/merchant/simulate` (try an unsaved policy). The editor page is next.
+- Migrations: `supabase/migrations/20260926140000_il_negotiation_policies.sql`, `20260926141000_il_agent_negotiations.sql`.
+
 ## Config
 
 All optional; see `.env.example`.
@@ -118,7 +124,7 @@ All optional; see `.env.example`.
 |---|---|
 | `AI_GATEWAY_API_KEY` | Merchant replies via Vercel AI Gateway (default model `claude-haiku-4-5`) |
 | `ANTHROPIC_API_KEY` | Used when no gateway key is set; calls the Claude API directly |
-| `KV_REST_API_URL` / `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_*`) | Sessions in Upstash Redis; otherwise in memory (lost on restart / across serverless instances) |
+| `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` | Sessions and messages in Supabase (`il_agent_negotiations`, `il_agent_negotiation_messages`), streamed live to `/merchant/live`; otherwise in memory (lost on restart / across serverless instances) |
 | `MERCHANT_MODEL` | Override the merchant model: a Claude id (`claude-sonnet-5`) or any gateway id (`openai/gpt-6-luna`) |
 | `PUBLIC_BASE_URL` | Overrides the server URL in the OpenAPI spec |
 

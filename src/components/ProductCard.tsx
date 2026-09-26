@@ -1,16 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { gbp, productAlt } from "@/lib/format";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { gbp } from "@/lib/format";
-
-export function productAlt(
-  product: Pick<Product, "brand" | "name" | "wash" | "cut">
-) {
-  return `${product.brand} ${product.name}, ${product.wash.toLowerCase()} ${product.cut.toLowerCase()}`;
-}
 
 export function ProductCard({ product }: { product: Product }) {
   return (

@@ -4,8 +4,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { Product } from "@/lib/types";
-import { productAlt } from "@/components/ProductCard";
-import { gbp } from "@/lib/format";
+import { gbp, productAlt } from "@/lib/format";
 import Link from "next/link";
 
 type Msg = { role: "user" | "assistant"; content: string };

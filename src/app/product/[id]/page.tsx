@@ -2,12 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PairAndPerk } from "@/components/PairAndPerk";
-import { productAlt } from "@/components/ProductCard";
+import { gbp, productAlt } from "@/lib/format";
 import { NegotiatePanel } from "@/components/NegotiatePanel";
 import { ProductJsonLd } from "@/components/ProductJsonLd";
 import { getPerkOptions, getProduct } from "@/lib/products";
 import { resolveShopperContext, hasPersonalContext } from "@/lib/context";
-import { gbp } from "@/lib/format";
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
 

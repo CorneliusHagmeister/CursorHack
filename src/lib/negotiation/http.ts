@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { NegotiationError, TERM_IDS } from "./engine";
+import { NegotiationError } from "./engine";
+import { TERM_IDS } from "./policies";
 import type { TermId } from "./types";
 
 export async function readJson(req: Request): Promise<Record<string, unknown>> {

@@ -4,9 +4,8 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { productAlt } from "@/components/ProductCard";
+import { gbp, productAlt } from "@/lib/format";
 import { PRODUCTS } from "@/lib/products";
-import { gbp } from "@/lib/format";
 
 function CheckoutForm() {
   const params = useSearchParams();

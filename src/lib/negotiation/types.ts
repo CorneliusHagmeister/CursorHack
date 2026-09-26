@@ -68,3 +68,18 @@ export type Decision =
   | { type: "quote"; offer: Offer } // price for the terms the buyer proposed
   | { type: "hold"; best: Offer } // too low even with every term; best possible shown
   | { type: "info" }; // no price action, just conversation
+
+/** Merchant-editable negotiation rules for one product */
+export type ProductPolicy = {
+  negotiable: boolean; // false: price holds at list, only Pair & Perk (if on) is offered
+  floorPrice: number; // lowest GBP the merchant will ever accept (hidden from buyers)
+  terms: Record<TermId, { enabled: boolean; discount: number }>; // GBP off list per term
+  perkEnabled: boolean;
+  perkIds: string[] | null; // allowed free pairs; null = every eligible pair
+  sellingPoints: string; // talking points for the merchant voice, never pricing
+};
+
+export type PricingContext = {
+  product: import("@/lib/types").Product;
+  policy: ProductPolicy;
+};
