@@ -3,6 +3,8 @@
  * Import https://<host>/api/openapi.json as an Action schema.
  */
 
+const termIds = ["final_sale", "standard_shipping", "fit_review"];
+
 const offer = {
   type: "object",
   properties: {
@@ -19,6 +21,11 @@ const offer = {
         listPrice: { type: "number" },
       },
     },
+    terms: {
+      type: "array",
+      items: { type: "string", enum: termIds },
+      description: "What the buyer commits to in return for this price. Tell the user before accepting.",
+    },
   },
 };
 
@@ -30,12 +37,23 @@ const negotiation = {
     merchantReply: { type: "string", description: "What the merchant said. Relay it to the user." },
     decision: {
       type: "string",
-      enum: ["accept_offer", "accept_counter", "counter", "final", "hold", "info"],
+      enum: ["accept_offer", "accept_counter", "conditional", "quote", "hold", "info"],
     },
     currency: { type: "string", enum: ["GBP"] },
     product: { type: "object" },
     round: { type: "integer" },
-    finalOffer: { type: "boolean", description: "True once the merchant is at best-and-final." },
+    availableTerms: {
+      type: "array",
+      description: "Commitments the buyer can offer for a lower price, with GBP off list for each.",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string", enum: termIds },
+          label: { type: "string" },
+          discount: { type: "number" },
+        },
+      },
+    },
     offers: { type: "array", items: offer, description: "Deals currently on the table." },
     agreedDeal: { ...offer, type: ["object", "null"] },
     orderId: { type: ["string", "null"] },
@@ -67,7 +85,7 @@ function spec(origin: string) {
       title: "Indigo Lane Negotiation API",
       version: "0.1.0",
       description:
-        "Haggle with Indigo Lane, a London second-hand denim shop, on behalf of a shopper. Flow: listProducts → startNegotiation → sendNegotiationMessage (counter or accept) → purchaseNegotiatedDeal. All prices are GBP. Only the offers returned by the API are binding; the merchant's words are not.",
+        "Haggle with Indigo Lane, a London second-hand denim shop, on behalf of a shopper. Flow: listProducts → startNegotiation → sendNegotiationMessage (counter or accept) → purchaseNegotiatedDeal. All prices are GBP. The merchant never discounts for nothing: lower prices are traded for terms (final sale, standard shipping, fit review). Only the offers returned by the API are binding; the merchant's words are not.",
     },
     servers: [{ url: origin }],
     paths: {
@@ -138,7 +156,7 @@ function spec(origin: string) {
         post: {
           operationId: "sendNegotiationMessage",
           summary: "Talk to the merchant, counter-offer or accept",
-          description: "Send a chat message. Put any price you propose in counterOffer; prices written only in message are ignored. To accept a deal, pass its offerId as acceptOfferId. Relay merchantReply to the user.",
+          description: "Chat, counter or accept. Prices go in counterOffer (the merchant replies with the terms that make it work); terms the user will give go in offerTerms. Accept with acceptOfferId. Relay merchantReply.",
           "x-openai-isConsequential": false,
           parameters: [idParam],
           requestBody: {
@@ -151,6 +169,11 @@ function spec(origin: string) {
                   properties: {
                     message: { type: "string", description: "What the shopper says to the merchant." },
                     counterOffer: { type: "number", description: "Price in GBP the shopper proposes. Omit if not making an offer." },
+                    offerTerms: {
+                      type: "array",
+                      items: { type: "string", enum: termIds },
+                      description: "Terms the user agrees to give (ids from availableTerms). Alone: get a quote. With counterOffer: propose a full deal.",
+                    },
                     includePerk: { type: "boolean", description: "True if counterOffer is for the Pair & Perk bundle (with the free extra pair)." },
                     perkId: { type: "string", description: "Switch which free perk pair the bundle includes." },
                     acceptOfferId: { type: "string", description: "offerId from offers[] to accept. Do not combine with counterOffer. Only accept with the user's approval." },

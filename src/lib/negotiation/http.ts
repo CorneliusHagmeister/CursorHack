@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { NegotiationError } from "./engine";
+import { NegotiationError, TERM_IDS } from "./engine";
+import type { TermId } from "./types";
 
 export async function readJson(req: Request): Promise<Record<string, unknown>> {
   try {
@@ -46,4 +47,16 @@ export async function handle(fn: () => Promise<unknown>, status = 200) {
     console.error(err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
+}
+
+export function optionalTerms(body: Record<string, unknown>, field: string): TermId[] | undefined {
+  const v = body[field];
+  if (v == null) return undefined;
+  const list = Array.isArray(v) ? v : [v];
+  for (const t of list) {
+    if (typeof t !== "string" || !TERM_IDS.includes(t as TermId)) {
+      throw new NegotiationError(400, `${field} must be term ids from: ${TERM_IDS.join(", ")}`);
+    }
+  }
+  return list as TermId[];
 }

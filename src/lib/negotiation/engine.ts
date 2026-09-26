@@ -6,11 +6,15 @@ import type {
   Negotiation,
   Offer,
   PerkSummary,
+  Term,
+  TermId,
 } from "./types";
 
 /**
- * Deterministic merchant pricing rules. Every number the buyer ever sees comes
- * from here — the LLM only phrases the decision.
+ * Deterministic merchant pricing rules, "enterprise style": the price never
+ * drops for nothing. Every reduction is traded for a buyer commitment (a
+ * term), and the hidden floor caps the total. Pair & Perk adds value (a free
+ * pair) instead of cutting price. The LLM only phrases these decisions.
  */
 const DEFAULT_MAX_DISCOUNT = 0.2;
 const MAX_DISCOUNT: Record<string, number> = {
@@ -21,12 +25,15 @@ const MAX_DISCOUNT: Record<string, number> = {
 };
 /** What giving away a perk pair "costs" the merchant — it's slow-moving stock */
 const PERK_COST_RATIO = 0.4;
-/** After this many counters the merchant goes to best-and-final */
-const MAX_ROUNDS = 4;
-/** Counters below this share of the floor are treated as lowballs */
-const LOWBALL_RATIO = 0.7;
-const CONCESSION_SHARE = 0.45;
-const LOWBALL_CONCESSION_SHARE = 0.15;
+
+/** The give-gets on offer. Discounts are a share of list, or flat GBP. */
+const TERM_RULES: { id: TermId; label: string; share?: number; flat?: number }[] = [
+  { id: "final_sale", label: "Final sale — no returns", share: 0.08 },
+  { id: "standard_shipping", label: "Standard 5-day shipping instead of next-day", flat: 4 },
+  { id: "fit_review", label: "Post a fit review with photos within 14 days", share: 0.06 },
+];
+
+export const TERM_IDS: TermId[] = TERM_RULES.map((r) => r.id);
 
 export class NegotiationError extends Error {
   constructor(
@@ -40,6 +47,19 @@ export class NegotiationError extends Error {
 export function floorPrice(product: Product): number {
   const discount = MAX_DISCOUNT[product.id] ?? DEFAULT_MAX_DISCOUNT;
   return Math.ceil(product.price * (1 - discount));
+}
+
+export function availableTerms(product: Product): Term[] {
+  return TERM_RULES.map((r) => ({
+    id: r.id,
+    label: r.label,
+    discount: Math.max(1, r.flat ?? Math.round(product.price * (r.share ?? 0))),
+  }));
+}
+
+export function termLabels(product: Product, ids: TermId[]): string[] {
+  const terms = availableTerms(product);
+  return ids.map((id) => terms.find((t) => t.id === id)?.label ?? id);
 }
 
 function perkCost(perk: Product): number {
@@ -73,28 +93,50 @@ function pickPerk(productId: string, perkId?: string): Product | null {
   return [...options].sort((a, b) => b.price - a.price)[0] ?? null;
 }
 
-function bundlePrice(listPrice: number, ask: number, perk: Product): number {
-  return Math.min(listPrice, ask + perkCost(perk));
+/** Lowest price the merchant accepts for a set of terms (with or without the free perk) */
+function priceFor(product: Product, terms: TermId[], perk: Product | null): number {
+  const all = availableTerms(product);
+  const off = terms.reduce((s, id) => s + (all.find((t) => t.id === id)?.discount ?? 0), 0);
+  const floor = floorPrice(product) + (perk ? perkCost(perk) : 0);
+  return Math.max(floor, product.price - off);
 }
 
-function buildOffers(
-  round: number,
-  listPrice: number,
-  ask: number,
-  perk: Product | null
-): Offer[] {
-  const offers: Offer[] = [
-    { offerId: `r${round}-cash`, kind: "cash", price: ask, perk: null },
-  ];
-  if (perk) {
-    offers.push({
-      offerId: `r${round}-perk-${perk.id}`,
-      kind: "pair-and-perk",
-      price: bundlePrice(listPrice, ask, perk),
-      perk: summarizePerk(perk),
-    });
+function sortTerms(terms: TermId[]): TermId[] {
+  const order = TERM_RULES.map((r) => r.id);
+  return [...new Set(terms)].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+}
+
+function makeOffer(
+  product: Product,
+  terms: TermId[],
+  perk: Product | null,
+  price = priceFor(product, terms, perk)
+): Offer {
+  const sorted = sortTerms(terms);
+  return {
+    offerId: [perk ? `perk-${perk.id}` : "cash", sorted.join("+") || "list", String(price)].join(":"),
+    kind: perk ? "pair-and-perk" : "cash",
+    price,
+    perk: perk ? summarizePerk(perk) : null,
+    terms: sorted,
+  };
+}
+
+/** Standing offers (list price, bundle at list) plus any conditional ones */
+function tableWith(product: Product, perk: Product | null, extra: Offer[] = []): Offer[] {
+  const base = [makeOffer(product, [], null), ...(perk ? [makeOffer(product, [], perk)] : [])];
+  const seen = new Set<string>();
+  return [...extra, ...base].filter((o) => !seen.has(o.offerId) && seen.add(o.offerId));
+}
+
+/** All subsets of the available terms, fewest first */
+function termSubsets(product: Product): TermId[][] {
+  const ids = availableTerms(product).map((t) => t.id);
+  const subsets: TermId[][] = [];
+  for (let mask = 0; mask < 1 << ids.length; mask++) {
+    subsets.push(ids.filter((_, i) => mask & (1 << i)));
   }
-  return offers;
+  return subsets.sort((a, b) => a.length - b.length);
 }
 
 export function requireProduct(productId: string): Product {
@@ -105,18 +147,11 @@ export function requireProduct(productId: string): Product {
   return product;
 }
 
-/** Opening position: list price, plus the classic Pair & Perk bundle at list */
 export function openingTerms(
   product: Product,
   perkId?: string
-): Pick<Negotiation, "merchantAsk" | "round" | "finalOfferMade" | "offers"> {
-  const perk = pickPerk(product.id, perkId);
-  return {
-    merchantAsk: product.price,
-    round: 0,
-    finalOfferMade: false,
-    offers: buildOffers(0, product.price, product.price, perk),
-  };
+): Pick<Negotiation, "round" | "offers"> {
+  return { round: 0, offers: tableWith(product, pickPerk(product.id, perkId)) };
 }
 
 export function applyBuyerTurn(
@@ -126,7 +161,8 @@ export function applyBuyerTurn(
   if (neg.status === "purchased") {
     throw new NegotiationError(409, "This negotiation already ended in a purchase.");
   }
-  const priceAction = turn.counterOffer != null || turn.acceptOfferId != null;
+  const priceAction =
+    turn.counterOffer != null || turn.acceptOfferId != null || (turn.offerTerms?.length ?? 0) > 0;
   if (neg.status === "agreed" && priceAction) {
     throw new NegotiationError(
       409,
@@ -139,21 +175,36 @@ export function applyBuyerTurn(
   const currentPerkId =
     turn.perkId ?? neg.offers.find((o) => o.perk)?.perk?.productId;
   const perk = pickPerk(product.id, currentPerkId);
+  if (turn.includePerk && !perk) {
+    throw new NegotiationError(400, "No Pair & Perk options exist for this product.");
+  }
+  const dealPerk = turn.includePerk ? perk : null;
+  const buyerTerms = sortTerms(turn.offerTerms ?? []);
 
   const base: Negotiation = {
     ...neg,
     updatedAt: now,
+    round: priceAction && !turn.acceptOfferId ? neg.round + 1 : neg.round,
     transcript: [
       ...neg.transcript,
-      { role: "buyer", text: turn.message, counterOffer: turn.counterOffer, at: now },
+      {
+        role: "buyer",
+        text: turn.message,
+        counterOffer: turn.counterOffer,
+        offerTerms: buyerTerms.length ? buyerTerms : undefined,
+        at: now,
+      },
     ],
   };
-
   const agree = (offer: Offer): Negotiation => ({
     ...base,
     status: "agreed",
     offers: [offer],
     agreed: { ...offer, agreedAt: now },
+  });
+  const onTable = (extra: Offer[]): Negotiation => ({
+    ...base,
+    offers: tableWith(product, perk, extra),
   });
 
   // 1. Buyer accepts one of our standing offers
@@ -170,73 +221,50 @@ export function applyBuyerTurn(
     return { next: agree(offer), decision: { type: "accept_offer", offer } };
   }
 
-  // 2. No price action — conversation only (perk choice may still change the offers)
-  if (turn.counterOffer == null) {
-    const offers =
-      neg.status === "open"
-        ? buildOffers(neg.round, product.price, neg.merchantAsk, perk)
-        : neg.offers;
-    return { next: { ...base, offers }, decision: { type: "info" } };
+  // 2. Buyer names a price — maybe with terms of their own
+  if (turn.counterOffer != null) {
+    const counter = Math.round(turn.counterOffer * 100) / 100;
+
+    // Their own terms already justify their price: deal
+    if (counter >= priceFor(product, buyerTerms, dealPerk)) {
+      // Never charge more than list, even if they offered more
+      const offer = makeOffer(product, buyerTerms, dealPerk, Math.min(counter, product.price));
+      return { next: agree(offer), decision: { type: "accept_counter", offer } };
+    }
+
+    // Ask for as little as possible in return: fewest extra terms, then the
+    // combination that gives away the least while still meeting their price
+    const needed = termSubsets(product)
+      .map((extra) => sortTerms([...buyerTerms, ...extra]))
+      .filter((terms) => counter >= priceFor(product, terms, dealPerk))
+      .sort(
+        (a, b) =>
+          a.length - b.length ||
+          priceFor(product, b, dealPerk) - priceFor(product, a, dealPerk)
+      )[0];
+    if (needed) {
+      const offer = makeOffer(product, needed, dealPerk, counter);
+      return { next: onTable([offer]), decision: { type: "conditional", offer } };
+    }
+
+    // Too low even with every term — show the best we can do
+    const best = makeOffer(
+      product,
+      availableTerms(product).map((t) => t.id),
+      dealPerk
+    );
+    return { next: onTable([best]), decision: { type: "hold", best } };
   }
 
-  // 3. Buyer counter-offer, evaluated in cash-equivalent terms
-  const counter = Math.round(turn.counterOffer * 100) / 100;
-  if (turn.includePerk && !perk) {
-    throw new NegotiationError(400, "No Pair & Perk options exist for this product.");
-  }
-  const withPerk = turn.includePerk && perk ? perk : null;
-  const cashEquivalent = withPerk ? counter - perkCost(withPerk) : counter;
-  const floor = floorPrice(product);
-  const ask = neg.merchantAsk;
-
-  if (cashEquivalent >= ask) {
-    // Buyer met or beat our ask — close at our ask, never above it
-    const offer: Offer = {
-      offerId: `r${neg.round}-deal`,
-      kind: withPerk ? "pair-and-perk" : "cash",
-      price: withPerk ? bundlePrice(product.price, ask, withPerk) : ask,
-      perk: withPerk ? summarizePerk(withPerk) : null,
-    };
-    return { next: agree(offer), decision: { type: "accept_counter", offer } };
+  // 3. Buyer proposes terms without a price — quote them
+  if (buyerTerms.length > 0) {
+    const offer = makeOffer(product, buyerTerms, dealPerk);
+    return { next: onTable([offer]), decision: { type: "quote", offer } };
   }
 
-  if (neg.finalOfferMade) {
-    return {
-      next: { ...base, offers: buildOffers(neg.round, product.price, ask, perk) },
-      decision: { type: "hold" },
-    };
-  }
-
-  const round = neg.round + 1;
-  const lowball = cashEquivalent < floor * LOWBALL_RATIO;
-  const gap = ask - floor;
-  let nextAsk = Math.max(
-    floor,
-    Math.floor(ask - gap * (lowball ? LOWBALL_CONCESSION_SHARE : CONCESSION_SHARE))
-  );
-  if (gap > 0 && nextAsk === ask) nextAsk = ask - 1;
-  if (round >= MAX_ROUNDS) nextAsk = floor;
-
-  if (cashEquivalent >= nextAsk) {
-    // Their number is at least what we'd have countered with — take it
-    const offer: Offer = {
-      offerId: `r${round}-deal`,
-      kind: withPerk ? "pair-and-perk" : "cash",
-      price: counter,
-      perk: withPerk ? summarizePerk(withPerk) : null,
-    };
-    return { next: agree(offer), decision: { type: "accept_counter", offer } };
-  }
-
-  const final = nextAsk === floor;
+  // 4. Conversation only (a perk switch may still change the standing offers)
   return {
-    next: {
-      ...base,
-      round,
-      merchantAsk: nextAsk,
-      finalOfferMade: final,
-      offers: buildOffers(round, product.price, nextAsk, perk),
-    },
-    decision: final ? { type: "final" } : { type: "counter", lowball },
+    next: neg.status === "open" ? onTable(neg.offers.filter((o) => o.terms.length)) : base,
+    decision: { type: "info" },
   };
 }

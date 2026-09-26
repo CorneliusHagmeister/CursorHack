@@ -5,8 +5,10 @@ import type { Order, OrderItem } from "@/lib/types";
 import {
   NegotiationError,
   applyBuyerTurn,
+  availableTerms,
   openingTerms,
   requireProduct,
+  termLabels,
 } from "./engine";
 import { SESSION_TTL_SECONDS, getNegotiation, saveNegotiation } from "./sessions";
 import type { BuyerTurn, Negotiation } from "./types";
@@ -16,14 +18,10 @@ function guidance(neg: Negotiation): string {
   switch (neg.status) {
     case "open":
       return [
-        "Send a message with counterOffer (GBP number) to haggle; set includePerk=true to counter on the Pair & Perk bundle instead.",
-        "Send acceptOfferId (one of offers[].offerId) to lock in a deal.",
-        neg.finalOfferMade
-          ? "The merchant is at best-and-final: lower counters will not move the price."
-          : "",
-      ]
-        .filter(Boolean)
-        .join(" ");
+        "The merchant only lowers the price in exchange for terms (see availableTerms).",
+        "Send offerTerms (term ids) to get a price quote, or counterOffer (GBP) and the merchant will say which terms make that price work; set includePerk=true to negotiate the Pair & Perk bundle.",
+        "Send acceptOfferId (one of offers[].offerId) to lock in a deal. Tell the user what each offer's terms commit them to before accepting.",
+      ].join(" ");
     case "agreed":
       return `Deal agreed at £${neg.agreed?.price}. Confirm with the user, then call purchaseNegotiatedDeal with price=${neg.agreed?.price} and their name, email and shipping city.`;
     case "purchased":
@@ -48,7 +46,7 @@ export function publicView(neg: Negotiation, opts: { transcript?: boolean } = {}
       condition: product.condition,
     },
     round: neg.round,
-    finalOffer: neg.finalOfferMade,
+    availableTerms: availableTerms(product),
     offers: neg.status === "open" ? neg.offers : [],
     agreedDeal: neg.agreed,
     orderId: neg.orderId,
@@ -168,12 +166,14 @@ export async function purchaseDeal(
     });
   }
   const perkSavings = perk?.price ?? 0;
+  const terms = termLabels(product, deal.terms);
+  const termsNote = terms.length ? `Buyer agreed: ${terms.join("; ")}` : "";
 
   const order = await createOrder({
     buyerName: input.buyerName,
     buyerEmail: input.buyerEmail,
     shippingCity: input.shippingCity,
-    note: input.note,
+    note: [input.note, termsNote].filter(Boolean).join(" · ") || undefined,
     items,
     subtotal: product.price + perkSavings,
     perkSavings,
@@ -181,9 +181,9 @@ export async function purchaseDeal(
     listPrice: product.price,
     discount: Math.max(0, product.price - deal.price),
     mechanic: deal.price < product.price ? "negotiated-pair-and-perk" : "pair-and-perk",
-    negotiationSummary: `Agent API negotiation ${neg.id} (${neg.round} counter${neg.round === 1 ? "" : "s"}): list £${product.price} → £${deal.price}${
+    negotiationSummary: `Agent API negotiation ${neg.id} (${neg.round} round${neg.round === 1 ? "" : "s"}): list £${product.price} → £${deal.price}${
       perk ? ` + ${perk.brand} ${perk.name} free` : ""
-    }.`,
+    }${terms.length ? ` in exchange for: ${terms.join("; ")}` : ""}.`,
   });
 
   const done: Negotiation = {

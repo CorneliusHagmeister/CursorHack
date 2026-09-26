@@ -1,5 +1,14 @@
 export type NegotiationStatus = "open" | "agreed" | "purchased";
 
+/** Commitments a buyer can give in exchange for a lower price */
+export type TermId = "final_sale" | "standard_shipping" | "fit_review";
+
+export type Term = {
+  id: TermId;
+  label: string;
+  discount: number; // GBP off the list price for this product
+};
+
 export type PerkSummary = {
   productId: string;
   brand: string;
@@ -13,12 +22,14 @@ export type Offer = {
   kind: "cash" | "pair-and-perk";
   price: number; // GBP the buyer pays
   perk: PerkSummary | null; // free complementary pair, if any
+  terms: TermId[]; // what the buyer commits to in return
 };
 
 export type TranscriptEntry = {
   role: "buyer" | "merchant";
   text: string;
   counterOffer?: number;
+  offerTerms?: TermId[];
   at: string;
 };
 
@@ -29,9 +40,7 @@ export type Negotiation = {
   listPrice: number;
   buyerName?: string;
   status: NegotiationStatus;
-  round: number; // number of buyer counter-offers processed
-  merchantAsk: number; // current cash ask
-  finalOfferMade: boolean;
+  round: number; // number of buyer price moves (counters or proposed terms)
   offers: Offer[]; // currently acceptable offers
   agreed: (Offer & { agreedAt: string }) | null;
   orderId: string | null;
@@ -44,6 +53,7 @@ export type Negotiation = {
 export type BuyerTurn = {
   message: string;
   counterOffer?: number;
+  offerTerms?: TermId[];
   includePerk?: boolean;
   perkId?: string;
   acceptOfferId?: string;
@@ -53,8 +63,8 @@ export type BuyerTurn = {
 export type Decision =
   | { type: "opening" }
   | { type: "accept_offer"; offer: Offer } // buyer accepted one of our offers
-  | { type: "accept_counter"; offer: Offer } // we accepted the buyer's number
-  | { type: "counter"; lowball: boolean } // we moved, new offers on the table
-  | { type: "final" } // we moved to our best and final
-  | { type: "hold" } // we won't move further
+  | { type: "accept_counter"; offer: Offer } // buyer's price + terms work, deal done
+  | { type: "conditional"; offer: Offer } // "that price works if you give us X"
+  | { type: "quote"; offer: Offer } // price for the terms the buyer proposed
+  | { type: "hold"; best: Offer } // too low even with every term; best possible shown
   | { type: "info" }; // no price action, just conversation

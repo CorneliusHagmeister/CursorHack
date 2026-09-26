@@ -6,7 +6,15 @@ This is separate from the on-site deal desk (`/api/negotiate` + `NegotiatePanel`
 
 ## How it works
 
-- **Prices are deterministic.** [`src/lib/negotiation/engine.ts`](../src/lib/negotiation/engine.ts) decides every number: a hidden floor per product (20% under list by default), a concession curve, and best-and-final after 4 counters. The bundle price that includes a free Pair & Perk pair is offered alongside the cash price as a second lever.
+- **Give to get, like enterprise pricing.** [`src/lib/negotiation/engine.ts`](../src/lib/negotiation/engine.ts) decides every number, and the price never drops for nothing. Each reduction is traded for a buyer commitment (a *term*):
+
+  | Term id | Buyer gives | Off list |
+  |---|---|---|
+  | `final_sale` | Final sale, no returns | 8% |
+  | `standard_shipping` | Standard 5-day shipping instead of next-day | £4 |
+  | `fit_review` | Fit review with photos within 14 days | 6% |
+
+  A hidden floor per product (20% under list by default) caps the total. A bare counter-offer gets "that price works if you give X", where X is the smallest trade that makes it work. If nothing gets that low, the merchant holds and shows its best offer. Pair & Perk adds value (a free pair at list price) instead of cutting price.
 - **Claude only writes the words.** [`voice.ts`](../src/lib/negotiation/voice.ts) turns the engine's decision into a short reply from "Mo". Claude never sees the floor. If a reply mentions any £ amount or percentage the engine didn't produce, it is replaced by a template. Templates are also used when no key is set or the call fails.
 - **Only structured fields are binding.** Prices go in `counterOffer` / `acceptOfferId`, never parsed from chat text. Purchase checks `price` against the server's agreed deal.
 
@@ -16,7 +24,7 @@ This is separate from the on-site deal desk (`/api/negotiate` + `NegotiatePanel`
 listProducts → startNegotiation → sendNegotiationMessage (repeat) → purchaseNegotiatedDeal
 ```
 
-Every response includes `offers` (what's on the table right now), `status` (`open` → `agreed` → `purchased`) and a `guidance` string telling the agent what it can do next.
+Every response includes `availableTerms` (the menu above, in £ for this product), `offers` (what's on the table right now, each with the `terms` the buyer commits to), `status` (`open` → `agreed` → `purchased`) and a `guidance` string telling the agent what it can do next.
 
 ## Endpoints
 
@@ -54,10 +62,11 @@ Optional: `perkId` picks a specific free pair.
 
 ### Message, counter or accept
 
-Body fields: `message` (text), plus at most one of:
+Body fields: `message` (text), plus:
 
-- `counterOffer`: GBP number. Add `includePerk: true` to counter on the bundle.
-- `acceptOfferId`: one of the current `offers[].offerId`.
+- `counterOffer`: GBP number. The merchant replies with the terms that make it work (`decision: conditional`), or holds (`hold`). Add `includePerk: true` to counter on the bundle.
+- `offerTerms`: term ids the buyer will give. Alone, you get a price quote (`quote`). With `counterOffer`, it's a full proposal; if it works, the deal closes (`accept_counter`).
+- `acceptOfferId`: one of the current `offers[].offerId` (not combined with `counterOffer`).
 
 `perkId` switches which free pair the bundle includes.
 
@@ -66,9 +75,17 @@ curl -X POST $HOST/api/negotiations/$ID/messages -H 'content-type: application/j
   -d '{"message":"Would you do 75?","counterOffer":75}'
 ```
 
-The response adds `decision`: `counter`, `final`, `hold`, `accept_counter`, `accept_offer` or `info`.
+The response adds `decision`: `conditional`, `quote`, `hold`, `accept_counter`, `accept_offer` or `info`.
 
-Example run on the £95 A.P.C.: counters of 50 / 75 / 78 / 70 got £92 / £87 / £84 / £81 (best and final, or £93 with the free Dickies).
+Example run on the £95 A.P.C.:
+
+| Buyer | Merchant |
+|---|---|
+| "Any chance of a discount?" | Explains the terms menu (£8 / £4 / £6 off) |
+| counterOffer 90 | "I can do £90 if you post a fit review" |
+| counterOffer 70 | Holds: best is £81 with all three terms (the floor) |
+| offerTerms final_sale + standard_shipping | Quote: £83 |
+| acceptOfferId (the £83 offer) | Agreed; the order records both commitments |
 
 ### Purchase
 
@@ -76,10 +93,10 @@ Only after `status` is `agreed`. `price` must equal `agreedDeal.price`.
 
 ```bash
 curl -X POST $HOST/api/negotiations/$ID/purchase -H 'content-type: application/json' \
-  -d '{"price":93,"buyerName":"Sam","buyerEmail":"sam@example.com","shippingCity":"London"}'
+  -d '{"price":83,"buyerName":"Sam","buyerEmail":"sam@example.com","shippingCity":"London"}'
 ```
 
-This creates a normal order (`negotiated-pair-and-perk`, with list price, discount and a summary). It shows on `/merchant`.
+This creates a normal order (`negotiated-pair-and-perk`, with list price, discount, and a summary plus note listing what the buyer agreed to). It shows on `/merchant`.
 
 ### Errors
 
@@ -87,7 +104,7 @@ This creates a normal order (`negotiated-pair-and-perk`, with list price, discou
 
 ## Connecting an assistant
 
-**ChatGPT:** create a GPT → Configure → Actions → Import from URL → `https://<host>/api/openapi.json`. Auth: none. `purchaseNegotiatedDeal` is marked `x-openai-isConsequential`, so ChatGPT asks the user before buying. Suggested GPT instruction: *"Negotiate for the user with the Indigo Lane actions. Relay merchantReply, put prices only in counterOffer, and get the user's OK before accepting or purchasing."*
+**ChatGPT:** create a GPT → Configure → Actions → Import from URL → `https://<host>/api/openapi.json`. Auth: none. `purchaseNegotiatedDeal` is marked `x-openai-isConsequential`, so ChatGPT asks the user before buying. Suggested GPT instruction: *"Negotiate for the user with the Indigo Lane actions. Relay merchantReply. Put prices only in counterOffer and terms the user agrees to in offerTerms. Explain what an offer's terms commit the user to, and get their OK before accepting or purchasing."*
 
 **Claude:** use the same OpenAPI operations as tool definitions. An MCP wrapper around `src/lib/negotiation/service.ts` is the natural next step.
 
@@ -99,9 +116,10 @@ All optional; see `.env.example`.
 
 | Variable | Effect |
 |---|---|
-| `AI_GATEWAY_API_KEY` | Merchant replies via Vercel AI Gateway (`anthropic/claude-opus-5`) |
+| `AI_GATEWAY_API_KEY` | Merchant replies via Vercel AI Gateway (default model `claude-haiku-4-5`) |
 | `ANTHROPIC_API_KEY` | Used when no gateway key is set; calls the Claude API directly |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_*`) | Sessions in Upstash Redis; otherwise in memory (lost on restart / across serverless instances) |
+| `MERCHANT_MODEL` | Override the merchant model: a Claude id (`claude-sonnet-5`) or any gateway id (`openai/gpt-6-luna`) |
 | `PUBLIC_BASE_URL` | Overrides the server URL in the OpenAPI spec |
 
 Responses include `replySource: "llm" | "template"` so you can tell which voice answered.
