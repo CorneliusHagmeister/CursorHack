@@ -1,115 +1,139 @@
-"use client";
-
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import type { ReactNode } from "react";
+import type { CatalogueFacets, FacetOption } from "@/lib/catalogue";
 
-const WAISTS = [28, 29, 30, 31, 32, 33, 34, 36];
-const BRANDS = ["A.P.C.", "Nudie Jeans", "Levi's", "Edwin", "Carhartt WIP"];
-const CONDITIONS = ["Like New", "Excellent", "Very Good", "Good", "Fair"];
-const MAX_PRICES = [
-  { label: "Under £40", value: 40 },
-  { label: "Under £60", value: 60 },
-  { label: "Under £90", value: 90 },
-];
+const VISIBLE_BRANDS = 6;
 
-function Chip({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
+type CatalogueFiltersProps = {
+  facets: CatalogueFacets;
+  idPrefix: string;
+  shopperWaist?: number;
+  budgetMax?: number;
+};
+
+const optionLabel = (option: FacetOption, label: string) =>
+  `${label}, ${option.count} ${option.count === 1 ? "pair" : "pairs"}${option.active ? ", selected" : ""}`;
+
+const FilterChip = ({ option, label = option.label }: { option: FacetOption; label?: string }) => {
+  if (!option.active && option.count === 0) {
+    return (
+      <span className="rounded-full px-3 py-1.5 text-xs text-stone-300" aria-hidden>
+        {label}
+      </span>
+    );
+  }
   return (
     <Link
-      href={href}
-      className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-        active
-          ? "bg-stone-900 text-white"
-          : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+      href={option.href}
+      scroll={false}
+      aria-label={optionLabel(option, label)}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
+        option.active ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-700 hover:bg-stone-200"
       }`}
     >
-      {children}
+      {label}
+      <span className="tabular-nums opacity-60">{option.count}</span>
     </Link>
   );
-}
+};
 
-export function CatalogueFilters() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+const FilterGroup = ({ id, title, children }: { id: string; title: string; children: ReactNode }) => (
+  <div role="group" aria-labelledby={id}>
+    <h3 id={id} className="text-sm font-medium text-stone-900">
+      {title}
+    </h3>
+    <div className="mt-2">{children}</div>
+  </div>
+);
 
-  const withParam = (key: string, value: string | null) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value == null || searchParams.get(key) === value) params.delete(key);
-    else params.set(key, value);
-    return `/?${params.toString()}`;
-  };
-
-  const clear = () => router.push("/");
-
-  const hasFilters = [
-    "waist",
-    "brand",
-    "condition",
-    "max_price",
-    "cut",
-    "q",
-  ].some((k) => searchParams.get(k));
+export const CatalogueFilters = ({ facets, idPrefix, shopperWaist, budgetMax }: CatalogueFiltersProps) => {
+  const shownBrands = facets.brands.slice(0, VISIBLE_BRANDS);
+  const moreBrands = facets.brands.slice(VISIBLE_BRANDS);
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {WAISTS.map((w) => (
-          <Chip
-            key={w}
-            href={withParam("waist", String(w))}
-            active={searchParams.get("waist") === String(w)}
-          >
-            W{w}
-          </Chip>
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {BRANDS.map((b) => (
-          <Chip
-            key={b}
-            href={withParam("brand", b)}
-            active={searchParams.get("brand") === b}
-          >
-            {b}
-          </Chip>
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {CONDITIONS.map((c) => (
-          <Chip
-            key={c}
-            href={withParam("condition", c)}
-            active={searchParams.get("condition") === c}
-          >
-            {c}
-          </Chip>
-        ))}
-        {MAX_PRICES.map((p) => (
-          <Chip
-            key={p.value}
-            href={withParam("max_price", String(p.value))}
-            active={searchParams.get("max_price") === String(p.value)}
-          >
-            {p.label}
-          </Chip>
-        ))}
-        {hasFilters && (
-          <button
-            type="button"
-            onClick={clear}
-            className="rounded-full px-3 py-1.5 text-xs font-medium text-stone-500 underline"
-          >
-            Clear
-          </button>
+    <div className="space-y-6">
+      <FilterGroup id={`${idPrefix}-size`} title="Waist">
+        <div className="flex flex-wrap gap-2">
+          {facets.waists.map((option) => (
+            <FilterChip
+              key={option.value}
+              option={option}
+              label={option.value === shopperWaist ? `${option.label} · yours` : option.label}
+            />
+          ))}
+        </div>
+      </FilterGroup>
+
+      <FilterGroup id={`${idPrefix}-cut`} title="Cut">
+        <div className="flex flex-wrap gap-2">
+          {facets.cuts.map((option) => (
+            <FilterChip key={option.label} option={option} />
+          ))}
+        </div>
+      </FilterGroup>
+
+      <FilterGroup id={`${idPrefix}-condition`} title="Condition">
+        <div className="flex overflow-hidden rounded-full border border-stone-200">
+          {facets.conditions.map((option) => {
+            const empty = !option.active && option.count === 0;
+            const tone = option.active
+              ? "bg-stone-900 text-white"
+              : empty
+                ? "pointer-events-none text-stone-300"
+                : "bg-white text-stone-700 hover:bg-stone-100";
+            return (
+              <Link
+                key={option.label}
+                href={option.href}
+                scroll={false}
+                aria-label={optionLabel(option, option.label)}
+                aria-disabled={empty || undefined}
+                tabIndex={empty ? -1 : undefined}
+                className={`flex flex-1 flex-col items-center justify-center border-r border-stone-200 px-1 py-1.5 text-center text-[11px] leading-tight last:border-r-0 ${tone}`}
+              >
+                {option.label}
+                <span className="tabular-nums opacity-60">{option.count}</span>
+              </Link>
+            );
+          })}
+        </div>
+        <div className="mt-1 flex justify-between px-1 text-[11px] text-stone-400" aria-hidden>
+          <span>Newer</span>
+          <span>More worn</span>
+        </div>
+      </FilterGroup>
+
+      <FilterGroup id={`${idPrefix}-price`} title="Price">
+        <div className="flex flex-wrap gap-2">
+          {facets.prices.map((option) => (
+            <FilterChip
+              key={option.value}
+              option={option}
+              label={option.value === budgetMax ? `${option.label} · your budget` : option.label}
+            />
+          ))}
+        </div>
+      </FilterGroup>
+
+      <FilterGroup id={`${idPrefix}-brand`} title="Brand">
+        <div className="flex flex-wrap gap-2">
+          {shownBrands.map((option) => (
+            <FilterChip key={option.label} option={option} />
+          ))}
+        </div>
+        {moreBrands.length > 0 && (
+          <details className="group mt-2">
+            <summary className="cursor-pointer list-none text-xs text-stone-600 underline group-open:hidden">
+              {moreBrands.length} more brands
+            </summary>
+            <div className="flex flex-wrap gap-2">
+              {moreBrands.map((option) => (
+                <FilterChip key={option.label} option={option} />
+              ))}
+            </div>
+          </details>
         )}
-      </div>
+      </FilterGroup>
     </div>
   );
-}
+};
