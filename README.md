@@ -1,5 +1,13 @@
 # Haggleberry
 
+## Hackathon
+
+- Live: https://indigo-lane.vercel.app/
+- Writeup: [docs/hackathon/writeup.md](docs/hackathon/writeup.md)
+- End card: [/pitch](/pitch)
+- Demo script: [docs/hackathon/demo-script.md](docs/hackathon/demo-script.md)
+- Track: Agentic Commerce
+
 Second-hand denim shop. The landing page is anonymous, like a logged-out Vinted visit. Fit, budget, and past buys appear only after an ad link, a sign-in, or a shopper's own agent.
 
 ## Stack
