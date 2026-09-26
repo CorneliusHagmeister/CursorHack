@@ -1,18 +1,23 @@
-# Supabase: reuse CogCart
+# Supabase: indigo-lane (Europe)
 
-The free-plan org has **CogCart**, **Leaderboard**, and **trmnl-db** (all paused). Restore **CogCart** in the dashboard first (free plan allows two active projects).
+Project ref: `qsedqcfzodffngzcrcgh`  
+URL: `https://qsedqcfzodffngzcrcgh.supabase.co`
 
 ```bash
-brew install supabase/tap/supabase   # already done on this machine
-supabase login                       # browser auth — you do this
-supabase link --project-ref <cogcart-project-ref>
-supabase db dump --schema-only -f supabase/schema-before.sql
+supabase login
+supabase link --project-ref qsedqcfzodffngzcrcgh
 supabase db push
-supabase db execute -f supabase/seed.sql
+# optional seed (needs linked project):
+psql "$DATABASE_URL" -f supabase/seed.sql
+# or paste supabase/seed.sql into the SQL editor
 ```
 
-Then paste URL + anon + service role into `.env.local` from `.env.example`.
+Env (`.env.local`, never commit):
 
-All Indigo Lane tables use the `il_` prefix so they do not clash with existing CogCart tables.
+```
+NEXT_PUBLIC_SUPABASE_URL=https://qsedqcfzodffngzcrcgh.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<from dashboard>
+SUPABASE_SERVICE_ROLE_KEY=<from dashboard → Settings → API, for admin/seed only>
+```
 
-Without env vars the app still runs: seed catalogue, file/memory orders, demo cookie login, and `il_demo_agent_token`.
+Without the service role key the app still works: demo cookie login, seed catalogue, file orders, `il_demo_agent_token`.
