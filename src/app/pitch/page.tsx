@@ -21,6 +21,8 @@ const qrs = [
     caption: "Cornelius Hagmeister",
     alt: "QR code for Cornelius Hagmeister",
   },
+  { src: "/pitch/repo.png", caption: REPO, alt: "QR code for the GitHub repository" },
+  { src: "/pitch/agents.png", caption: `${LIVE}api/md`, alt: "QR code for the agent markdown API" },
 ] as const;
 
 export default function PitchPage() {
@@ -86,7 +88,7 @@ export default function PitchPage() {
 
         <p className="mt-10 max-w-2xl text-sm text-ink">{CLOSING}</p>
 
-        <div className="mt-12 grid gap-8 sm:grid-cols-3">
+        <div className="mt-12 grid gap-8 sm:grid-cols-3 lg:grid-cols-5">
           {qrs.map((qr) => (
             <figure key={qr.src} className="flex flex-col items-center gap-3">
               <Image
