@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { Header } from "@/components/Header";
 
@@ -14,21 +15,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Indigo Lane, second-hand denim",
+  title: "Indigo Lane · second-hand denim",
   description:
-    "Fleek London hackathon demo: UK second-hand jeans with Pair & Perk New Ways to Buy and size/condition AI assist.",
+    "Buy second-hand jeans from UK sellers. Make an offer, unlock a free bundle pair, or shop through your own agent.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en-GB"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#f7f3ec] text-stone-900">
-        <Header />
+      <body className="min-h-full flex flex-col bg-[#faf9f7] text-stone-900">
+        <Suspense fallback={<div className="h-14 border-b border-stone-200 bg-white" />}>
+          <Header />
+        </Suspense>
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-stone-200/80 py-6 text-center text-xs text-stone-500">
+        <footer className="border-t border-stone-200 py-6 text-center text-xs text-stone-500">
           Indigo Lane · second-hand denim
         </footer>
       </body>

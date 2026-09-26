@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
+import { resolveShopperContext } from "@/lib/context";
+import { serviceListOrders, servicePlaceOrder } from "@/lib/services";
 import { getProduct } from "@/lib/products";
-import { createOrder, listOrders } from "@/lib/store";
-import { getShopper } from "@/lib/shopper";
-import type { OrderItem } from "@/lib/types";
 
 export async function GET() {
-  const orders = await listOrders();
+  const orders = await serviceListOrders();
   return NextResponse.json({ orders });
 }
 
@@ -23,6 +22,7 @@ export async function POST(req: Request) {
     negotiationSummary,
     concessions,
     negotiated,
+    channel,
   } = body as {
     primaryId?: string;
     perkId?: string | null;
@@ -35,81 +35,67 @@ export async function POST(req: Request) {
     negotiationSummary?: string;
     concessions?: string;
     negotiated?: boolean;
+    channel?: "web" | "agent";
   };
 
   if (!primaryId || !buyerName || !buyerEmail || !shippingCity) {
     return NextResponse.json(
-      { error: "primaryId, buyerName, buyerEmail, shippingCity required" },
+      {
+        error: "primaryId, buyerName, buyerEmail, shippingCity required",
+        hint: "Send the buyer fields and a primary catalogue id",
+      },
       { status: 400 }
     );
   }
 
   const primary = getProduct(primaryId);
   if (!primary) {
-    return NextResponse.json({ error: "Primary product not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Primary product not found", hint: "Use GET /api/v1/products" },
+      { status: 404 }
+    );
   }
 
-  const shopper = getShopper();
+  const ctx = await resolveShopperContext({
+    authorization: req.headers.get("authorization"),
+  });
+
   const listed = listPrice ?? primary.price;
-  let paid = typeof negotiatedPrice === "number" ? negotiatedPrice : primary.price;
-  // Guard: never below 80% of list for demo sanity
+  let paid =
+    typeof negotiatedPrice === "number" ? negotiatedPrice : primary.price;
   const floor = Math.round(primary.price * 0.8);
   if (paid < floor) paid = floor;
   if (paid > primary.price) paid = primary.price;
 
-  const items: OrderItem[] = [
-    {
-      productId: primary.id,
-      name: primary.name,
-      brand: primary.brand,
-      price: paid,
-      role: "primary",
-    },
-  ];
-
-  let perkSavings = 0;
   if (perkId) {
     const perk = getProduct(perkId);
     if (!perk || !perk.perkEligible) {
       return NextResponse.json({ error: "Invalid perk" }, { status: 400 });
     }
-    if (perk.price >= primary.price) {
-      return NextResponse.json(
-        { error: "Perk must be cheaper than primary list" },
-        { status: 400 }
-      );
-    }
-    items.push({
-      productId: perk.id,
-      name: perk.name,
-      brand: perk.brand,
-      price: 0,
-      role: "perk",
-    });
-    perkSavings = perk.price;
   }
 
-  const discount = Math.max(0, listed - paid);
-  const subtotal = listed + perkSavings;
-  const isNegotiated = Boolean(negotiated) || discount > 0 || Boolean(negotiationSummary);
-
-  const order = await createOrder({
-    buyerName,
-    buyerEmail,
-    shippingCity,
-    items,
-    subtotal,
-    perkSavings,
-    total: paid,
-    listPrice: listed,
-    discount,
-    mechanic: isNegotiated ? "negotiated-pair-and-perk" : "pair-and-perk",
-    note,
-    negotiationSummary:
-      negotiationSummary ||
-      (concessions ? `Concessions: ${concessions}` : undefined),
-    shopperId: shopper.id,
-  });
-
-  return NextResponse.json({ order }, { status: 201 });
+  try {
+    const order = await servicePlaceOrder({
+      primaryId,
+      perkId,
+      buyerName,
+      buyerEmail,
+      shippingCity,
+      note,
+      negotiatedPrice: paid,
+      listPrice: listed,
+      negotiationSummary:
+        negotiationSummary ||
+        (concessions ? `Concessions: ${concessions}` : undefined),
+      negotiated: Boolean(negotiated) || paid < listed,
+      shopperId: ctx.shopper?.id,
+      channel: channel ?? (ctx.source === "agent" ? "agent" : "web"),
+    });
+    return NextResponse.json({ order }, { status: 201 });
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Order failed" },
+      { status: 400 }
+    );
+  }
 }

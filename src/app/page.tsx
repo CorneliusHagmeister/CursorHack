@@ -1,73 +1,57 @@
-import Image from "next/image";
-import Link from "next/link";
-import { ProductCard, productAlt } from "@/components/ProductCard";
-import { gbp } from "@/lib/format";
-import { getProduct, listProducts } from "@/lib/products";
+import { Suspense } from "react";
+import { ProductCard } from "@/components/ProductCard";
+import { CatalogueFilters } from "@/components/CatalogueFilters";
+import { searchProducts } from "@/lib/products";
+import type { Condition, ProductFilters } from "@/lib/types";
 
-export default function HomePage() {
-  const featured = getProduct("apc-petit-new");
-  const also = ["nudie-lean-dean", "edwin-ed55"]
-    .map((id) => getProduct(id))
-    .filter((product) => product != null);
-  const perks = listProducts()
-    .filter((product) => product.perkEligible)
-    .slice(0, 2);
+type Search = Promise<Record<string, string | string[] | undefined>>;
 
-  if (!featured) return null;
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Search;
+}) {
+  const sp = await searchParams;
+  const filters: ProductFilters = {
+    q: typeof sp.q === "string" ? sp.q : undefined,
+    waist: sp.waist ? Number(sp.waist) : undefined,
+    brand: typeof sp.brand === "string" ? sp.brand : undefined,
+    condition:
+      typeof sp.condition === "string"
+        ? (sp.condition as Condition)
+        : undefined,
+    cut: typeof sp.cut === "string" ? sp.cut : undefined,
+    maxPrice: sp.max_price ? Number(sp.max_price) : undefined,
+  };
+
+  const products = searchProducts(filters);
 
   return (
-    <div>
-      <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:px-6 lg:grid-cols-2 lg:py-10">
-        <Link
-          href={`/product/${featured.id}#negotiate`}
-          className="relative block aspect-[4/5] overflow-hidden rounded-2xl bg-stone-200"
-          aria-label={`${featured.brand} ${featured.name}`}
-        >
-          <Image
-            src={featured.image}
-            alt={productAlt(featured)}
-            fill
-            priority
-            sizes="(min-width: 1024px) 36rem, 100vw"
-            className="object-cover"
-          />
-        </Link>
-        <div>
-          <h1 className="text-4xl font-semibold tracking-tight text-indigo-950 sm:text-5xl">
-            {featured.brand} {featured.name}
-          </h1>
-          <p className="mt-4 max-w-md text-lg text-stone-600">
-            Raw indigo, still stiff. One London seller, unwashed.
-          </p>
-          <p className="mt-4 text-3xl font-semibold tabular-nums text-indigo-950">
-            {gbp(featured.price)}
-          </p>
-          <Link
-            href={`/product/${featured.id}#negotiate`}
-            className="mt-8 inline-flex rounded-full bg-indigo-950 px-5 py-2.5 text-sm font-medium text-amber-50 hover:bg-indigo-900"
-          >
-            Negotiate this pair
-          </Link>
-        </div>
-      </section>
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">
+          Second-hand denim
+        </h1>
+        <p className="mt-1 text-sm text-stone-500">
+          {products.length} pairs · UK sellers
+        </p>
+      </div>
 
-      <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-6">
-        <h2 className="mb-4 text-xl font-semibold text-indigo-950">Also in the shop</h2>
-        <div className="grid gap-5 sm:grid-cols-2">
-          {also.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+      <Suspense fallback={null}>
+        <CatalogueFilters />
+      </Suspense>
 
-        <h2 className="mb-4 mt-12 text-xl font-semibold text-indigo-950">
-          Free with Pair &amp; Perk
-        </h2>
-        <div className="grid gap-5 sm:grid-cols-2">
-          {perks.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
+      <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
+        {products.map((p) => (
+          <ProductCard key={p.id} product={p} />
+        ))}
+      </div>
+
+      {products.length === 0 && (
+        <p className="mt-12 text-center text-sm text-stone-500">
+          No pairs match those filters.
+        </p>
+      )}
     </div>
   );
 }
